@@ -1,0 +1,76 @@
+/* JCI Atlantic Constitution Games — shared theme.
+   Direction: sticker-board arcade. Chunky wide display type, thick ink outlines, hard offset shadows,
+   JCI blue + gold with coral/mint for wrong/right, on a faint blueprint grid. */
+:root{
+  --bg:#e6f2fb; --grid:rgba(0,104,170,.09); --surface:#ffffff; --surface-2:#f3f9fd;
+  --ink:#0a1f33; --muted:#4c6a82; --border:#0a1f33; --shade:#0a1f33; --soft:#cfe2ef;
+  --blue:#0081c6; --blue-ink:#ffffff; --blue-soft:#cde9f9;
+  --gold:#ffc53a; --gold-soft:#ffeab3; --coral:#ff6a55; --mint:#1fbf87; --on-color:#0a1f33;
+  --display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#071522; --grid:rgba(90,170,230,.07); --surface:#0f2738; --surface-2:#13304a;
+  --ink:#eaf5fd; --muted:#93b3c9; --border:#5f9fc7; --shade:#000910; --soft:#24455e;
+  --blue:#2fa8e6; --blue-ink:#04131e; --blue-soft:#15415d;
+  --gold:#ffc53a; --gold-soft:#4a3a0e; --coral:#ff7a66; --mint:#33d29a; --on-color:#0a1f33; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#071522; --grid:rgba(90,170,230,.07); --surface:#0f2738; --surface-2:#13304a;
+  --ink:#eaf5fd; --muted:#93b3c9; --border:#5f9fc7; --shade:#000910; --soft:#24455e;
+  --blue:#2fa8e6; --blue-ink:#04131e; --blue-soft:#15415d;
+  --gold:#ffc53a; --gold-soft:#4a3a0e; --coral:#ff7a66; --mint:#33d29a; --on-color:#0a1f33; color-scheme:dark}
+
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{background:var(--bg)}
+body{margin:0;background-color:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+[hidden]{display:none!important}
+img{max-width:100%}
+p{margin:0}
+
+/* top bar */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none}
+.logo .mark{width:38px;height:38px;border-radius:11px;background:var(--blue);border:2.5px solid var(--border);box-shadow:3px 3px 0 var(--shade);
+  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:.72rem;color:var(--blue-ink);letter-spacing:-.02em}
+.logo .txt{font-family:var(--display);font-weight:700;font-size:.92rem;line-height:1.1;letter-spacing:-.01em}
+.logo .txt small{display:block;font-family:var(--body);font-weight:600;font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.back{font-weight:700;font-size:.88rem;color:var(--ink);text-decoration:none;border:2px solid var(--border);border-radius:99px;padding:6px 12px;background:var(--surface);box-shadow:2px 2px 0 var(--shade)}
+.back:hover{background:var(--gold-soft)}
+
+/* type */
+.display{font-family:var(--display);font-weight:800;letter-spacing:-.035em;line-height:1;margin:0;text-wrap:balance}
+.hl{color:var(--blue)}
+.mark-gold{background:var(--gold);color:var(--on-color);padding:0 .18em;border-radius:.18em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.label{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--muted)}
+.muted{color:var(--muted)}
+
+/* surfaces */
+.panel{background:var(--surface);border:2.5px solid var(--border);border-radius:20px;box-shadow:6px 6px 0 var(--shade);overflow:hidden}
+.band{background:var(--blue);color:var(--blue-ink);border-bottom:2.5px solid var(--border);padding:11px 18px;display:flex;justify-content:space-between;gap:10px;
+  font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:800}
+.band.good{background:var(--mint);color:var(--on-color)} .band.bad{background:var(--coral);color:var(--on-color)} .band.gold{background:var(--gold);color:var(--on-color)}
+.cite{align-self:flex-start;display:inline-block;font-size:.78rem;font-weight:800;background:var(--gold);color:var(--on-color);padding:3px 11px;border-radius:99px;border:2px solid var(--border)}
+
+/* buttons */
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{border:2.5px solid var(--border);border-radius:14px;padding:12px 16px;font-weight:800;font-size:1rem;background:var(--surface);color:var(--ink);
+  box-shadow:3px 3px 0 var(--shade);transition:transform .08s,box-shadow .08s,background .15s}
+.btn:hover{background:var(--surface-2)}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--shade)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.main{background:var(--blue);color:var(--blue-ink)}
+.btn.gold{background:var(--gold);color:var(--on-color)}
+.btn.good{background:var(--mint);color:var(--on-color)}
+.btn.bad{background:var(--coral);color:var(--on-color)}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>.btn{flex:1}
+
+.tape{font-family:var(--display);font-weight:700;letter-spacing:.24em;font-size:.68rem;text-align:center;color:var(--muted)}
+.tape b{color:var(--blue)}
+@keyframes pop{0%{transform:scale(.94);opacity:.4}100%{transform:none;opacity:1}}
+.pop{animation:pop .22s ease-out}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

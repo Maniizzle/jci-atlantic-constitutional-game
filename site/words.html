@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Constitution Word Games</title>
+<meta name="theme-color" content="#0081c6">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Figtree:wght@400;600;800&display=swap">
+<link rel="stylesheet" href="theme.css">
+<style>
+/* Layout: tabbed page. Crossword grid with the active clue above it, clues in a side column; bingo card beside the caller panel. */
+.app{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:22px;padding-block:18px 44px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.tabs{display:flex;background:var(--surface);border:2.5px solid var(--border);border-radius:14px;padding:4px;gap:4px;box-shadow:3px 3px 0 var(--shade)}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:10px;font-weight:800}
+.tabs button[aria-selected="true"]{background:var(--gold);color:var(--on-color)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:10px 14px;font-size:.92rem}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(1.7rem,6.4vw,2.5rem);line-height:1.02;letter-spacing:-.04em;margin:0;text-wrap:balance}
+h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .15em;border-radius:.15em}
+
+/* crossword */
+.cw{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,300px);gap:28px;align-items:start}
+@media (max-width:780px){.cw{grid-template-columns:minmax(0,1fr)}}
+.left{display:flex;flex-direction:column;gap:14px;min-width:0}
+.active{background:var(--blue);color:var(--blue-ink);border:2.5px solid var(--border);border-radius:14px;box-shadow:3px 3px 0 var(--shade);padding:10px 14px;min-height:3.4em;display:flex;gap:10px;align-items:center;font-size:.95rem;font-weight:600}
+.active b{font-family:var(--display);font-weight:800;white-space:nowrap;font-size:.8rem;background:var(--gold);color:var(--on-color);border:2px solid var(--border);border-radius:8px;padding:2px 8px}
+.grid{display:grid;gap:2px;background:var(--border);padding:2.5px;border-radius:12px;width:100%;max-width:580px;box-shadow:6px 6px 0 var(--shade)}
+.cell{position:relative;aspect-ratio:1;background:var(--border);border-radius:2px}
+.cell.on{background:var(--surface)}
+.cell.on.word{background:var(--blue-soft)}
+.cell.on.cur{background:var(--gold)}
+.cell.on.cur input{color:var(--on-color)}
+.cell.bad input{color:var(--coral)!important}
+.cell.ok input{color:var(--mint)}
+.cell input{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;text-align:center;
+  font-family:var(--display);font-weight:800;font-size:clamp(.75rem,3.4vw,1.2rem);text-transform:uppercase;color:var(--ink);padding:0;padding-top:.3em;caret-color:transparent;border-radius:0}
+.cell input:focus{outline:none}
+.cell sup{position:absolute;top:2px;left:3px;font-size:clamp(.45rem,1.6vw,.6rem);line-height:1;color:var(--muted);pointer-events:none;font-weight:800;z-index:1}
+.clues{display:flex;flex-direction:column;gap:18px;background:var(--surface);border:2.5px solid var(--border);border-radius:18px;box-shadow:5px 5px 0 var(--shade);padding:16px}
+.clues ol{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:2px}
+.clues li{display:flex;gap:10px;padding:7px 8px;border-radius:10px;cursor:pointer;font-size:.92rem;font-weight:600}
+.clues li:hover{background:var(--surface-2)}
+.clues li b{font-family:var(--display);font-weight:800;min-width:1.6em;text-align:right;font-variant-numeric:tabular-nums;color:var(--blue)}
+.clues li.sel{background:var(--blue-soft)}
+.clues li.done span{color:var(--muted);text-decoration:line-through}
+.banner{background:var(--gold);color:var(--on-color);border:2.5px solid var(--border);border-radius:14px;padding:12px 14px;font-weight:800;box-shadow:3px 3px 0 var(--shade)}
+
+/* bingo */
+.bingo{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:28px;align-items:start}
+@media (max-width:780px){.bingo{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:2.5px solid var(--border);border-radius:22px;box-shadow:7px 7px 0 var(--shade);overflow:hidden;max-width:540px}
+.card-head{display:grid;grid-template-columns:repeat(5,1fr);background:var(--blue);color:var(--blue-ink);border-bottom:2.5px solid var(--border);font-family:var(--display);font-weight:800;text-align:center;font-size:1.4rem;padding-block:8px}
+.board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding:10px}
+.sq{aspect-ratio:1;border:2.5px solid var(--border);border-radius:12px;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center;
+  font-weight:800;font-size:clamp(.55rem,2.3vw,.8rem);line-height:1.1;padding:3px;overflow-wrap:anywhere;box-shadow:2px 2px 0 var(--shade);transition:background .15s,transform .08s}
+.sq:active{transform:translate(2px,2px);box-shadow:none}
+.sq.m{background:var(--gold);color:var(--on-color);transform:rotate(-3deg)}
+.sq.free{background:var(--blue);color:var(--blue-ink);font-family:var(--display)}
+.sq.win{background:var(--mint);color:var(--on-color)}
+.side{display:flex;flex-direction:column;gap:16px}
+.caller{background:var(--surface);border:2.5px solid var(--border);border-radius:20px;box-shadow:6px 6px 0 var(--shade);padding:18px;display:flex;flex-direction:column;gap:14px}
+.clue-big{font-family:var(--display);font-weight:700;font-size:1.25rem;line-height:1.25;letter-spacing:-.025em;min-height:3.8em;text-wrap:balance}
+.ans{font-size:.95rem;color:var(--muted);font-weight:600}
+.ans b{color:var(--on-color);background:var(--gold);border:2px solid var(--border);border-radius:8px;padding:1px 8px}
+.called{font-size:.85rem;color:var(--muted);font-weight:600}
+.count{font-variant-numeric:tabular-nums}
+.how{font-size:.92rem;color:var(--muted);display:flex;flex-direction:column;gap:8px;font-weight:600}
+.yell{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.03em;background:var(--mint);color:var(--on-color);border:2.5px solid var(--border);border-radius:14px;padding:8px 14px;box-shadow:4px 4px 0 var(--shade);align-self:flex-start;animation:pop .25s ease-out}
+</style></head><body>
+<div class="app">
+  <header>
+    <a class="back" href="index.html">← All games</a>
+    <div class="tabs" role="tablist">
+      <button role="tab" id="t-cw" aria-selected="true">Crossword</button>
+      <button role="tab" id="t-bg" aria-selected="false">Bingo</button>
+    </div>
+  </header>
+
+  <section id="p-cw" class="cw">
+    <div class="left">
+      <h1>The <em>Constitution</em> Crossword</h1>
+      <div class="active" id="activeClue"></div>
+      <div class="grid" id="grid"></div>
+      <div class="banner" id="cwDone" hidden></div>
+      <div class="btns">
+        <button class="btn main" id="check">Check answers</button>
+        <button class="btn" id="reveal">Reveal this word</button>
+        <button class="btn" id="clear">Clear grid</button>
+      </div>
+    </div>
+    <div class="clues"><div><span class="label">Across</span><ol id="across"></ol></div><div><span class="label">Down</span><ol id="down"></ol></div></div>
+  </section>
+
+  <section id="p-bg" class="bingo" hidden>
+    <div class="side" style="gap:12px">
+      <h1>Constitution <em>Bingo</em></h1>
+      <div class="card">
+        <div class="card-head"><span>J</span><span>C</span><span>I</span><span>★</span><span>A</span></div>
+        <div class="board" id="board"></div>
+      </div>
+      <div class="btns"><button class="btn" id="newCard">New card</button><button class="btn" id="clearMarks">Clear marks</button></div>
+    </div>
+    <div class="side">
+      <div class="caller">
+        <span class="label">Caller · <span class="count" id="calledN">0</span> of <span id="totalN"></span> clues called</span>
+        <div class="clue-big" id="clueBig">The host draws a clue. Players mark the matching answer on their card.</div>
+        <div class="ans" id="ans" hidden></div>
+        <div class="btns"><button class="btn main" id="draw">Draw a clue</button><button class="btn" id="showAns" disabled>Show answer</button><button class="btn" id="resetCall">Reset</button></div>
+        <div class="called" id="called"></div>
+      </div>
+      <div class="how">
+        <span class="label">How to play at a meeting</span>
+        <p>The host opens this page on the projector and draws clues. Everyone else opens it on their phone for their own card.</p>
+        <p>Tap a square to mark it. Five in a row, column or diagonal wins. Shout "JCI!"</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+function shuffle(a){a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+const $=id=>document.getElementById(id);
+
+/* ---------- tabs ---------- */
+function tab(which){
+  $("t-cw").setAttribute("aria-selected",which==="cw");$("t-bg").setAttribute("aria-selected",which==="bg");
+  $("p-cw").hidden=which!=="cw";$("p-bg").hidden=which!=="bg";store("jci-tab",which);
+}
+$("t-cw").onclick=()=>tab("cw");$("t-bg").onclick=()=>tab("bg");
+
+/* ---------- crossword ---------- */
+const H=13,Wd=13;
+const WORDS=[
+ {w:"NOVEMBER",r:2,c:3,d:"A",clue:"Month of the Annual General Meeting"},
+ {w:"SECRETARY",r:1,c:9,d:"D",clue:"Takes the minutes and gives notice of meetings"},
+ {w:"PROBATION",r:0,c:4,d:"D",clue:"At least six months as an intending member"},
+ {w:"INDUCTION",r:6,c:4,d:"A",clue:"Usually held once a year, in September"},
+ {w:"SENATOR",r:4,c:1,d:"A",clue:"JCI life membership award that the LO pays for"},
+ {w:"CREED",r:8,c:8,d:"A",clue:"Recited off hand at induction"},
+ {w:"ALUMNI",r:8,c:0,d:"A",clue:"Members who have reached the 40-year age limit"},
+ {w:"ROBERTS",r:5,c:11,d:"D",clue:"___ Rules of Order apply where the constitution is silent"},
+ {w:"QUORUM",r:7,c:2,d:"D",clue:"One-third of total membership, needed for a General Assembly to proceed"},
+ {w:"DUES",r:11,c:8,d:"A",clue:"30,000 naira, payable by 31 March"},
+ {w:"PROXY",r:10,c:1,d:"A",clue:"A stand-in vote. Never recognized at a General Assembly"},
+ {w:"IMPACT",r:0,c:2,d:"A",clue:"Grow | ______ | Lead"},
+ {w:"MANTRA",r:12,c:2,d:"A",clue:"\"Grow | Impact | Lead\" is JCI Atlantic's ______"},
+ {w:"BYLAW",r:5,c:0,d:"D",clue:"6-3 and 9-12 are each one of these"}
+];
+const sol={},nums={};
+WORDS.forEach(o=>{for(let k=0;k<o.w.length;k++){const r=o.r+(o.d==="D"?k:0),c=o.c+(o.d==="A"?k:0);sol[r+","+c]=o.w[k]}});
+// number starts in reading order
+let num=0;const starts=[...new Set(WORDS.map(o=>o.r+","+o.c))].sort((a,b)=>{const[ar,ac]=a.split(",").map(Number),[br,bc]=b.split(",").map(Number);return ar-br||ac-bc});
+starts.forEach(k=>nums[k]=++num);
+WORDS.forEach(o=>o.n=nums[o.r+","+o.c]);
+const cellsOf=o=>Array.from({length:o.w.length},(_,k)=>(o.r+(o.d==="D"?k:0))+","+(o.c+(o.d==="A"?k:0)));
+let cur=null,curWord=null;
+const inputs={};
+const grid=$("grid");grid.style.gridTemplateColumns=`repeat(${Wd},minmax(0,1fr))`;
+for(let r=0;r<H;r++)for(let c=0;c<Wd;c++){
+  const k=r+","+c,d=document.createElement("div");d.className="cell";d.dataset.k=k;
+  if(sol[k]){d.classList.add("on");
+    if(nums[k])d.innerHTML=`<sup>${nums[k]}</sup>`;
+    const i=document.createElement("input");i.id="c"+r+"_"+c;i.maxLength=1;i.autocomplete="off";i.setAttribute("autocapitalize","characters");i.setAttribute("aria-label","Row "+(r+1)+" column "+(c+1));
+    d.appendChild(i);inputs[k]=i;
+    i.addEventListener("focus",()=>select(k,false));
+    i.addEventListener("mousedown",e=>{if(cur===k){e.preventDefault();select(k,true)}});
+    i.addEventListener("input",()=>{const v=(i.value.match(/[a-z]/i)||[""])[0].toUpperCase();i.value=v;d.classList.remove("bad","ok");save();if(v)step(1);progress()});
+    i.addEventListener("keydown",e=>{
+      if(e.key==="Backspace"&&!i.value){e.preventDefault();step(-1,true)}
+      else if(e.key==="ArrowRight"){e.preventDefault();move(0,1)}else if(e.key==="ArrowLeft"){e.preventDefault();move(0,-1)}
+      else if(e.key==="ArrowDown"){e.preventDefault();move(1,0)}else if(e.key==="ArrowUp"){e.preventDefault();move(-1,0)}
+    });
+  }
+  grid.appendChild(d);
+}
+function wordsAt(k){return WORDS.filter(o=>cellsOf(o).includes(k))}
+function select(k,toggle){
+  const ws=wordsAt(k);
+  if(toggle&&ws.length>1)curWord=ws.find(o=>o!==curWord)||ws[0];
+  else if(!curWord||!cellsOf(curWord).includes(k))curWord=ws.find(o=>o.d==="A")||ws[0];
+  cur=k;paint();
+}
+function paint(){
+  document.querySelectorAll(".cell").forEach(d=>d.classList.remove("word","cur"));
+  if(curWord)cellsOf(curWord).forEach(k=>document.querySelector(`[data-k="${k}"]`).classList.add("word"));
+  if(cur)document.querySelector(`[data-k="${cur}"]`).classList.add("cur");
+  $("activeClue").innerHTML=curWord?`<b>${curWord.n} ${curWord.d==="A"?"Across":"Down"}</b><span>${esc(curWord.clue)}</span>`:`<span>Tap a square or a clue to start.</span>`;
+  document.querySelectorAll(".clues li").forEach(li=>li.classList.toggle("sel",curWord&&li.dataset.id===curWord.w));
+}
+function step(dir,clear){
+  if(!curWord)return;const cs=cellsOf(curWord),ix=cs.indexOf(cur)+dir;
+  if(ix>=0&&ix<cs.length){const i=inputs[cs[ix]];if(clear){i.value="";save()}cur=cs[ix];i.focus()}
+}
+function move(dr,dc){
+  let [r,c]=cur.split(",").map(Number);
+  for(let s=0;s<Wd;s++){r+=dr;c+=dc;const k=r+","+c;if(r<0||c<0||r>=H||c>=Wd)return;if(inputs[k]){curWord=wordsAt(k).find(o=>o.d===(dr?"D":"A"))||curWord;inputs[k].focus();return}}
+}
+function renderClues(){
+  ["A","D"].forEach(d=>{
+    $(d==="A"?"across":"down").innerHTML=WORDS.filter(o=>o.d===d).sort((a,b)=>a.n-b.n)
+      .map(o=>`<li data-id="${o.w}"><b>${o.n}</b><span>${esc(o.clue)} (${o.w.length})</span></li>`).join("");
+  });
+  document.querySelectorAll(".clues li").forEach(li=>li.onclick=()=>{
+    curWord=WORDS.find(o=>o.w===li.dataset.id);const cs=cellsOf(curWord);
+    const first=cs.find(k=>!inputs[k].value)||cs[0];inputs[first].focus({preventScroll:false});cur=first;paint();
+  });
+}
+function save(){const s={};for(const k in inputs)if(inputs[k].value)s[k]=inputs[k].value;store("jci-cw",JSON.stringify(s))}
+function progress(){
+  WORDS.forEach(o=>{const done=cellsOf(o).every(k=>inputs[k].value===sol[k]);const li=document.querySelector(`.clues li[data-id="${o.w}"]`);if(li)li.classList.toggle("done",done)});
+  const all=Object.keys(inputs).every(k=>inputs[k].value===sol[k]);
+  $("cwDone").hidden=!all;if(all)$("cwDone").textContent="Solved! Every word is correct. The General Legal Counsel approves.";
+}
+$("check").onclick=()=>{let wrong=0,empty=0;for(const k in inputs){const d=inputs[k].parentNode;d.classList.remove("bad","ok");
+  if(!inputs[k].value){empty++;continue}if(inputs[k].value===sol[k])d.classList.add("ok");else{d.classList.add("bad");wrong++}}
+  $("cwDone").hidden=false;$("cwDone").textContent=wrong?`${wrong} letter${wrong>1?"s":""} in red need another look.${empty?` ${empty} squares still empty.`:""}`:empty?`No mistakes so far. ${empty} squares to go.`:"Solved! Every word is correct. The General Legal Counsel approves.";};
+$("reveal").onclick=()=>{if(!curWord){$("activeClue").innerHTML="<span>Pick a word first, then reveal it.</span>";return}
+  cellsOf(curWord).forEach(k=>{inputs[k].value=sol[k];inputs[k].parentNode.classList.remove("bad")});save();progress()};
+$("clear").onclick=()=>{for(const k in inputs){inputs[k].value="";inputs[k].parentNode.classList.remove("bad","ok")}save();progress();$("cwDone").hidden=true};
+renderClues();
+try{const s=JSON.parse(store("jci-cw")||"{}");for(const k in s)if(inputs[k])inputs[k].value=s[k]}catch(e){}
+progress();paint();
+
+/* ---------- bingo ---------- */
+const TERMS=[
+ ["QUORUM","One-third of the total membership must be present for a General Assembly"],
+ ["CREED","Recited off hand at induction"],
+ ["PROXY","Never recognized: nobody may vote on someone else's behalf"],
+ ["MANTRA","Grow | Impact | Lead"],
+ ["DUES","Must be paid every year by 31 March"],
+ ["SENATOR","Life membership award; the LO pays, not the member"],
+ ["ALUMNI","Members who have reached the 40-year age limit"],
+ ["OATH","Taken right after reciting the Creed"],
+ ["PROBATION","At least six months as an intending member"],
+ ["INDUCTION","Held once a year, usually in September"],
+ ["SECRETARY","Takes the minutes and gives notice of meetings"],
+ ["NOVEMBER","The month of the Annual General Meeting"],
+ ["SUNDAY","Business meetings hold on the third one of every odd month"],
+ ["BYLAW","6-3, 7-9 and 9-12 are examples of these"],
+ ["AGM","Where the General Assembly elects officers"],
+ ["GLC","Serves as parliamentarian to the Board and General Assembly"],
+ ["IPP","Heads the Nomination Committee and the intending members interview"],
+ ["OTS","Mandatory officers' training, held in January"],
+ ["LAPEL PIN","Pinned on new members by the President at induction"],
+ ["18","The minimum age for membership"],
+ ["40","Membership ends at the close of the year you turn this age"],
+ ["₦30,000","The current annual dues"],
+ ["14 DAYS","Minimum notice before a General Assembly"],
+ ["60%","Quorum for a Board of Directors meeting"],
+ ["⅔","Vote needed to amend the constitution"],
+ ["ZERO HUNGER","One of the five focal points"],
+ ["MEETING MANAGER","Sets up the venue 45 minutes before the meeting"],
+ ["20 FEB","Deadline for September induction applications"],
+ ["VP ADMIN","Has first right of refusal if the President can't continue"],
+ ["HONORARY","Membership for outstanding citizens, approved by the General Assembly"],
+ ["₦500","Lateness fine for an ordinary member without notice"]
+];
+$("totalN").textContent=TERMS.length;
+let card=null,marks=null;
+function newCard(){card=shuffle(TERMS.map(t=>t[0])).slice(0,24);card.splice(12,0,"FREE");marks=card.map((_,k)=>k===12);saveCard();drawCard()}
+function saveCard(){store("jci-bingo",JSON.stringify({card,marks}))}
+const LINES=[];for(let r=0;r<5;r++)LINES.push([0,1,2,3,4].map(c=>r*5+c));for(let c=0;c<5;c++)LINES.push([0,1,2,3,4].map(r=>r*5+c));
+LINES.push([0,6,12,18,24],[4,8,12,16,20]);
+function drawCard(){
+  const won=LINES.filter(l=>l.every(k=>marks[k])),winSet=new Set(won.flat());
+  $("board").innerHTML=card.map((t,k)=>`<button class="sq ${k===12?"free":""} ${marks[k]&&k!==12?"m":""} ${winSet.has(k)?"win":""}" data-k="${k}" aria-pressed="${marks[k]}">${k===12?"FREE":esc(t)}</button>`).join("");
+  $("board").querySelectorAll(".sq").forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(k===12)return;marks[k]=!marks[k];saveCard();drawCard()});
+  const y=document.querySelector(".yell");if(y)y.remove();
+  if(won.length){const d=document.createElement("div");d.className="yell";d.textContent="BINGO! Shout \"JCI!\"";$("board").parentNode.after(d)}
+}
+$("newCard").onclick=newCard;$("clearMarks").onclick=()=>{marks=card.map((_,k)=>k===12);saveCard();drawCard()};
+try{const s=JSON.parse(store("jci-bingo")||"null");if(s&&s.card&&s.card.length===25){card=s.card;marks=s.marks;drawCard()}else newCard()}catch(e){newCard()}
+
+// caller
+let pool=shuffle(TERMS.map((_,k)=>k)),called=[];
+function renderCaller(){
+  $("calledN").textContent=called.length;
+  $("called").textContent=called.length?"Called: "+called.map(k=>TERMS[k][0]).join(" · "):"";
+}
+$("draw").onclick=()=>{
+  if(!pool.length){$("clueBig").textContent="Every clue has been called.";$("draw").disabled=true;return}
+  const k=pool.pop();called.push(k);
+  $("clueBig").textContent=TERMS[k][1];$("ans").hidden=true;$("ans").innerHTML=`Answer: <b>${esc(TERMS[k][0])}</b>`;$("showAns").disabled=false;renderCaller();
+};
+$("showAns").onclick=()=>{$("ans").hidden=false};
+$("resetCall").onclick=()=>{pool=shuffle(TERMS.map((_,k)=>k));called=[];$("draw").disabled=false;$("showAns").disabled=true;$("ans").hidden=true;
+  $("clueBig").textContent="The host draws a clue. Players mark the matching answer on their card.";renderCaller()};
+renderCaller();
+tab(store("jci-tab")==="bg"?"bg":"cw");
+</script>
+
+</body></html>
