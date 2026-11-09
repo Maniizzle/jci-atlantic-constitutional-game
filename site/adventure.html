@@ -9,7 +9,7 @@
 <style>
 /* Layout: narrow column. A stepped career ladder (bars rise left to right) above the scene panel. */
 .app{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px;padding-block:18px 36px}
-.hud{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .slips{font-family:var(--display);font-weight:800;font-size:.85rem;font-variant-numeric:tabular-nums;background:var(--surface);border:2.5px solid var(--border);border-radius:99px;padding:5px 14px;box-shadow:2px 2px 0 var(--shade)}
 .slips span{color:var(--coral)}
 
@@ -51,12 +51,15 @@ h2{font-size:1.45rem;line-height:1.15}
 <div class="app">
   <div class="hud">
     <a class="back" href="index.html">← All games</a>
+    <div class="player" id="player"></div>
     <div class="slips" id="slips" hidden>Slip-ups <span id="slipN">0</span></div>
   </div>
   <div class="ladder" id="ladder"></div>
   <main id="view"></main>
 </div>
+<script src="player.js"></script>
 <script>
+JCIPlayer.chip(document.getElementById("player"));
 const STAGES=["Applicant","Intending Member","Member","Director","Vice President","President"];
 const SCENES=[
  {s:0,title:"The application",
@@ -164,7 +167,7 @@ function intro(){
     <button class="main" id="go">Start my journey</button>
     <div class="sash"><b>GROW</b> · IMPACT · <b>LEAD</b></div>
   </div></section>`;
-  $("go").onclick=()=>{n=0;slips=0;$("slips").hidden=false;$("slipN").textContent=0;scene()};
+  $("go").onclick=()=>JCIPlayer.require(()=>{n=0;slips=0;$("slips").hidden=false;$("slipN").textContent=0;scene()});
 }
 
 function scene(){
@@ -202,7 +205,7 @@ function finale(){
   const verdict=slips===0?"A flawless campaign. The General Legal Counsel wants to hire you.":slips<=3?"A few stumbles on the way, but you knew your constitution when it counted.":"You got there, though the constitution had to remind you a few times. Maybe give it another read.";
   view.innerHTML=`<section class="panel"><div class="top good"><span>AGM results</span><span>Elected</span></div>
   <div class="body"><span class="label">Elected by majority vote</span>
-  <h1>You're the <em>President</em></h1>
+  <h1>${JCIPlayer.name()?esc(JCIPlayer.name())+", you're the ":"You're the "}<em>President</em></h1>
   <p>The Nomination Committee announces the result to the General Assembly, and you take the oath of office. Your term starts on 1 January.</p>
   <div><span class="label">Slip-ups on the way</span><div class="big">${slips}</div></div>
   <p>${verdict}</p>

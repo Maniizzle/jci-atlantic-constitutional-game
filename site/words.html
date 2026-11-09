@@ -70,6 +70,7 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
 <div class="app">
   <header>
     <a class="back" href="index.html">← All games</a>
+    <div class="player" id="player"></div>
     <div class="tabs" role="tablist">
       <button role="tab" id="t-cw" aria-selected="true">Crossword</button>
       <button role="tab" id="t-bg" aria-selected="false">Bingo</button>
@@ -117,7 +118,10 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
   </section>
 </div>
 
+<script src="player.js"></script>
 <script>
+JCIPlayer.chip(document.getElementById("player"));
+function solvedMsg(){const n=JCIPlayer.name();return (n?"Solved, "+n+"! ":"Solved! ")+"Every word is correct. The General Legal Counsel approves."}
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 function shuffle(a){a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a}
 function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
@@ -211,11 +215,11 @@ function save(){const s={};for(const k in inputs)if(inputs[k].value)s[k]=inputs[
 function progress(){
   WORDS.forEach(o=>{const done=cellsOf(o).every(k=>inputs[k].value===sol[k]);const li=document.querySelector(`.clues li[data-id="${o.w}"]`);if(li)li.classList.toggle("done",done)});
   const all=Object.keys(inputs).every(k=>inputs[k].value===sol[k]);
-  $("cwDone").hidden=!all;if(all)$("cwDone").textContent="Solved! Every word is correct. The General Legal Counsel approves.";
+  $("cwDone").hidden=!all;if(all)$("cwDone").textContent=solvedMsg();
 }
 $("check").onclick=()=>{let wrong=0,empty=0;for(const k in inputs){const d=inputs[k].parentNode;d.classList.remove("bad","ok");
   if(!inputs[k].value){empty++;continue}if(inputs[k].value===sol[k])d.classList.add("ok");else{d.classList.add("bad");wrong++}}
-  $("cwDone").hidden=false;$("cwDone").textContent=wrong?`${wrong} letter${wrong>1?"s":""} in red need another look.${empty?` ${empty} squares still empty.`:""}`:empty?`No mistakes so far. ${empty} squares to go.`:"Solved! Every word is correct. The General Legal Counsel approves.";};
+  $("cwDone").hidden=false;$("cwDone").textContent=wrong?`${wrong} letter${wrong>1?"s":""} in red need another look.${empty?` ${empty} squares still empty.`:""}`:empty?`No mistakes so far. ${empty} squares to go.`:solvedMsg();};
 $("reveal").onclick=()=>{if(!curWord){$("activeClue").innerHTML="<span>Pick a word first, then reveal it.</span>";return}
   cellsOf(curWord).forEach(k=>{inputs[k].value=sol[k];inputs[k].parentNode.classList.remove("bad")});save();progress()};
 $("clear").onclick=()=>{for(const k in inputs){inputs[k].value="";inputs[k].parentNode.classList.remove("bad","ok")}save();progress();$("cwDone").hidden=true};
@@ -268,7 +272,7 @@ function drawCard(){
   $("board").innerHTML=card.map((t,k)=>`<button class="sq ${k===12?"free":""} ${marks[k]&&k!==12?"m":""} ${winSet.has(k)?"win":""}" data-k="${k}" aria-pressed="${marks[k]}">${k===12?"FREE":esc(t)}</button>`).join("");
   $("board").querySelectorAll(".sq").forEach(b=>b.onclick=()=>{const k=+b.dataset.k;if(k===12)return;marks[k]=!marks[k];saveCard();drawCard()});
   const y=document.querySelector(".yell");if(y)y.remove();
-  if(won.length){const d=document.createElement("div");d.className="yell";d.textContent="BINGO! Shout \"JCI!\"";$("board").parentNode.after(d)}
+  if(won.length){const d=document.createElement("div");d.className="yell";d.textContent=(JCIPlayer.name()?"BINGO, "+JCIPlayer.name()+"!":"BINGO!")+" Shout \"JCI!\"";$("board").parentNode.after(d)}
 }
 $("newCard").onclick=newCard;$("clearMarks").onclick=()=>{marks=card.map((_,k)=>k===12);saveCard();drawCard()};
 try{const s=JSON.parse(store("jci-bingo")||"null");if(s&&s.card&&s.card.length===25){card=s.card;marks=s.marks;drawCard()}else newCard()}catch(e){newCard()}
@@ -291,6 +295,8 @@ $("resetCall").onclick=()=>{pool=shuffle(TERMS.map((_,k)=>k));called=[];revealed
   $("clueBig").textContent="The host draws a clue. Players mark the matching answer on their card.";renderCaller()};
 renderCaller();
 tab(store("jci-tab")==="bg"?"bg":"cw");
+// Opened from a direct link: ask for a name before playing
+if(!JCIPlayer.name())JCIPlayer.ask();
 </script>
 
 </body></html>

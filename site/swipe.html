@@ -10,7 +10,7 @@
 /* Layout: one-screen game. A thick-outlined card deck centred, big true/false buttons beneath. */
 html,body{height:100%}
 .app{max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;gap:16px;padding-block:18px 24px}
-.hud{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .score{font-family:var(--display);font-weight:800;font-size:.9rem;font-variant-numeric:tabular-nums;background:var(--surface);border:2.5px solid var(--border);border-radius:99px;padding:5px 14px;box-shadow:2px 2px 0 var(--shade)}
 .score span{color:var(--blue)}
 .bar{height:14px;background:var(--surface);border:2.5px solid var(--border);border-radius:99px;overflow:hidden}
@@ -72,13 +72,16 @@ html,body{height:100%}
 <div class="app">
   <div class="hud">
     <a class="back" href="index.html">← All games</a>
+    <div class="player" id="player"></div>
     <div class="score" id="score" hidden>Score <span id="scoreN">0</span></div>
   </div>
   <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
   <main id="view" class="stage"></main>
   <div class="controls" id="controls"></div>
 </div>
+<script src="player.js"></script>
 <script>
+JCIPlayer.chip(document.getElementById("player"));
 const CARDS=[
  ["Vision & Purpose","JCI Atlantic's mantra is Grow | Impact | Lead.",true,"That's the one. Three words every member should know by heart.","Article 5-4"],
  ["Vision & Purpose","Zero Hunger is one of JCI Atlantic's five focal points.",true,"The five are Quality Education, Entrepreneurial Growth, Zero Hunger, Continued Innovation and Leadership Development Opportunities.","Article 5-3"],
@@ -158,7 +161,7 @@ function home(){
     <div class="mantra"><b>GROW</b> · IMPACT · <b>LEAD</b></div>
   </section>`;
   controls.innerHTML="";
-  $("q").onclick=()=>start("quick");$("f").onclick=()=>start("full");
+  $("q").onclick=()=>JCIPlayer.require(()=>start("quick"));$("f").onclick=()=>JCIPlayer.require(()=>start("full"));
 }
 
 function start(m){
@@ -235,7 +238,7 @@ function finish(){
   const prev=store("jci-best-pct");
   if(prev===null||pct>+prev){store("jci-best-pct",pct);store("jci-best",label)}
   view.innerHTML=`<section class="panel">
-    <div class="eyebrow">Round complete</div>
+    <div class="eyebrow">${JCIPlayer.name()?"Well played, "+esc(JCIPlayer.name()):"Round complete"}</div>
     <div class="big">${score}<small> / ${deck.length}</small></div>
     <div><div class="answer">Your rank</div><div class="rank">${RANKS[r][1]}</div></div>
     <ul class="ladder">${RANKS.slice().reverse().map((x,k)=>`<li class="${RANKS.length-1-k===r?"on":""}"><span>${x[1]}</span><span>${x[0]}%+</span></li>`).join("")}</ul>

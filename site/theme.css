@@ -74,3 +74,21 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 @keyframes pop{0%{transform:scale(.94);opacity:.4}100%{transform:none;opacity:1}}
 .pop{animation:pop .22s ease-out}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* player name: chip + sign-in dialog */
+.player{display:flex;align-items:center;gap:8px;font-size:.85rem;font-weight:600;color:var(--muted);min-width:0}
+.player .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:14em}
+.player b{color:var(--ink)}
+.player .change{border:2px solid var(--border);border-radius:99px;padding:3px 10px;background:var(--surface);color:var(--ink);font-weight:800;font-size:.78rem;box-shadow:2px 2px 0 var(--shade)}
+.player .change:hover{background:var(--gold-soft)}
+.name-overlay{position:fixed;inset:0;z-index:50;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
+  padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.name-box{width:100%;max-width:420px;animation:pop .2s ease-out}
+.name-body{padding:22px;display:flex;flex-direction:column;gap:12px}
+.name-body h2{font-size:clamp(1.5rem,6.5vw,1.9rem)}
+.name-body input{font:inherit;font-size:1.15rem;font-weight:800;color:var(--ink);background:var(--surface-2);border:2.5px solid var(--border);border-radius:14px;padding:12px 14px;width:100%}
+.name-body input::placeholder{color:var(--muted);font-weight:600}
+.name-err{color:var(--coral);font-weight:800;font-size:.88rem}
+.name-body .row{margin-top:6px}
+html.name-open{overflow:hidden}

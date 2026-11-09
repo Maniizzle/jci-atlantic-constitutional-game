@@ -68,6 +68,7 @@
 <div class="wrap">
   <div class="topbar">
     <span class="logo"><span class="mark">JCI</span><span class="txt">JCI Atlantic<small>Constitution Games</small></span></span>
+    <div class="player" id="player"></div>
   </div>
 
   <section class="hero">
@@ -107,8 +108,15 @@
 
   <div class="foot"><span>Based on the JCI Atlantic Constitution, as amended at the AGM on 27 November 2022.</span><span class="tape"><b>GROW</b> · IMPACT · <b>LEAD</b></span></div>
 </div>
+<script src="player.js"></script>
 <script>
 try{const b=localStorage.getItem("jci-best");if(b)document.getElementById("best").textContent="Your best: "+b}catch(e){}
+JCIPlayer.chip(document.getElementById("player"));
+// Ask for a name the first time someone picks a game
+document.querySelectorAll(".tile").forEach(function(a){a.addEventListener("click",function(e){
+  if(JCIPlayer.name())return;
+  e.preventDefault();JCIPlayer.ask(function(){location.href=a.getAttribute("href")});
+})});
 </script>
 
 </body></html>
