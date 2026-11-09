@@ -274,18 +274,20 @@ $("newCard").onclick=newCard;$("clearMarks").onclick=()=>{marks=card.map((_,k)=>
 try{const s=JSON.parse(store("jci-bingo")||"null");if(s&&s.card&&s.card.length===25){card=s.card;marks=s.marks;drawCard()}else newCard()}catch(e){newCard()}
 
 // caller
-let pool=shuffle(TERMS.map((_,k)=>k)),called=[];
+let pool=shuffle(TERMS.map((_,k)=>k)),called=[],revealed=false;
 function renderCaller(){
   $("calledN").textContent=called.length;
-  $("called").textContent=called.length?"Called: "+called.map(k=>TERMS[k][0]).join(" · "):"";
+  // Hide the current clue's answer until the host reveals it
+  const shown=revealed?called:called.slice(0,-1);
+  $("called").textContent=shown.length?"Answers so far: "+shown.map(k=>TERMS[k][0]).join(" · "):"";
 }
 $("draw").onclick=()=>{
   if(!pool.length){$("clueBig").textContent="Every clue has been called.";$("draw").disabled=true;return}
-  const k=pool.pop();called.push(k);
+  const k=pool.pop();called.push(k);revealed=false;
   $("clueBig").textContent=TERMS[k][1];$("ans").hidden=true;$("ans").innerHTML=`Answer: <b>${esc(TERMS[k][0])}</b>`;$("showAns").disabled=false;renderCaller();
 };
-$("showAns").onclick=()=>{$("ans").hidden=false};
-$("resetCall").onclick=()=>{pool=shuffle(TERMS.map((_,k)=>k));called=[];$("draw").disabled=false;$("showAns").disabled=true;$("ans").hidden=true;
+$("showAns").onclick=()=>{$("ans").hidden=false;revealed=true;renderCaller()};
+$("resetCall").onclick=()=>{pool=shuffle(TERMS.map((_,k)=>k));called=[];revealed=false;$("draw").disabled=false;$("showAns").disabled=true;$("ans").hidden=true;
   $("clueBig").textContent="The host draws a clue. Players mark the matching answer on their card.";renderCaller()};
 renderCaller();
 tab(store("jci-tab")==="bg"?"bg":"cw");
