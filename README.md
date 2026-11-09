@@ -60,6 +60,8 @@ Every push to `master` runs `npx wrangler deploy`, which reads `wrangler.jsonc`.
 1. Storage & Databases → **D1** → database `jci-games` (its ID is in `wrangler.jsonc`).
 2. Open it → **Console**, paste the contents of `schema.sql`, run. (Safe to run again; it only creates what's missing.)
 
+**Already ran an older `schema.sql`?** Also run `migrations/001_allow_crossword.sql` once. Without it, crossword scores are refused. It keeps all existing scores.
+
 ### How names and scores are protected
 
 - Each phone gets a random device id the first time it plays. It works like a password for that player's name, travels in a request header, and is never shown or returned by the API.
@@ -120,7 +122,7 @@ To use your own domain (for example `quiz.jciatlantic.org`), add it under the pr
 - Swipe cards: the `CARDS` list in `site/swipe.html`. Each card is
   `[chapter, statement, true/false, explanation, article]`. Flipped versions are in `TWINS`.
 - Adventure scenes: the `SCENES` list in `site/adventure.html`.
-- Crossword: the `WORDS` list in `site/words.html`. Each word's row/column is fixed, so a new word needs a new layout.
+- Crossword: the `PUZZLES` list in `site/words.html` (6 puzzles). Each word's row/column is fixed, so changing words needs a new layout. If a puzzle's word count changes, update `PUZZLE_WORDS` in `src/lib.js` to match.
 - Bingo clues: the `TERMS` list in `site/words.html`.
 
 Commit and push, and Salus redeploys.

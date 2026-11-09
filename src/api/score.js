@@ -19,7 +19,7 @@ export async function onRequestPost({ request, env }) {
   if (!total) return fail(400, "mode");
   const score = int(b.score), ms = int(b.duration_ms);
   if (int(b.total) !== total || !g.check(score, total)) return fail(400, "score");
-  if (!(ms >= total * g.minMsPerItem && ms <= MAX_MS)) return fail(400, "duration");
+  if (!(ms >= g.minMs(b.mode, total) && ms <= MAX_MS)) return fail(400, "duration");
 
   // The name comes from the server's own record, never from the request
   const player = await env.DB.prepare("SELECT name FROM players WHERE device = ?1").bind(device).first();
@@ -31,12 +31,21 @@ export async function onRequestPost({ request, env }) {
     .first();
   if (recent.n >= LIMITS.scoresPerHour) return fail(429, "slow-down");
 
+  if (g.firstOnly) {
+    const before = await env.DB
+      .prepare("SELECT id FROM scores WHERE device = ?1 AND game = ?2 AND mode = ?3 LIMIT 1")
+      .bind(device, b.game, b.mode)
+      .first();
+    if (before) return fail(409, "already-played");
+  }
+
   await env.DB
     .prepare("INSERT INTO scores (game, mode, name, score, total, duration_ms, device) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)")
     .bind(b.game, b.mode, player.name, score, total, ms, device)
     .run();
 
   const [week, all] = await Promise.all([board(env.DB, b.game, b.mode, "week"), board(env.DB, b.game, b.mode, "all")]);
+  // (for the crossword, board() ranks total points across all puzzles)
   const mine = (rows) => rows.find((r) => r.device === device) || null;
   const w = mine(week), a = mine(all);
   return json({

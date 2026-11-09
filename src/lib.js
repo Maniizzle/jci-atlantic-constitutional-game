@@ -6,19 +6,31 @@ export const LIMITS = {
   boardSize: 20,
 };
 
+// Crossword puzzles: id -> number of words (10 points each). Must match site/words.html.
+export const PUZZLE_WORDS = { p1: 14, p2: 15, p3: 15, p4: 14, p5: 15, p6: 14 };
+
 // Rules a submitted score must satisfy. Anything else is rejected.
 export const GAMES = {
   swipe: {
     modes: { quick: 10, full: 32 },       // mode -> number of cards
     lowerIsBetter: false,
     check: (s, total) => s >= 0 && s <= total,
-    minMsPerItem: 900,                     // nobody reads and answers a card faster than this
+    minMs: (mode, total) => total * 900,   // nobody reads and answers a card faster than this
   },
   adventure: {
     modes: { story: 12 },                  // 12 scenes
     lowerIsBetter: true,                   // score = slip-ups
     check: (s) => s >= 0 && s <= 99,
-    minMsPerItem: 1500,
+    minMs: (mode, total) => total * 1500,
+  },
+  crossword: {
+    // mode = puzzle id, total = 10 points per word
+    modes: Object.fromEntries(Object.entries(PUZZLE_WORDS).map(([id, n]) => [id, n * 10])),
+    lowerIsBetter: false,
+    check: (s, total) => s >= 0 && s <= total,
+    minMs: (mode) => PUZZLE_WORDS[mode] * 3000, // at least 3 seconds a word
+    firstOnly: true,                       // only the first finish of each puzzle counts
+    board: "total",                        // ranked by total points across all puzzles
   },
 };
 
@@ -92,6 +104,22 @@ export async function board(db, game, mode, period) {
   const g = GAMES[game];
   const dir = g.lowerIsBetter ? "ASC" : "DESC";
   const since = period === "week" ? "datetime('now','-7 days')" : "'1970-01-01'";
+  if (g.board === "total") {
+    // One score per puzzle per player (first finish only), so the sum is fair.
+    const { results } = await db
+      .prepare(
+        `SELECT p.name, s.device, SUM(s.score) AS score, SUM(s.total) AS total,
+                SUM(s.duration_ms) AS duration_ms, COUNT(*) AS count, MIN(s.created_at) AS created_at
+         FROM scores s JOIN players p ON p.device = s.device
+         WHERE s.game = ?1 AND s.created_at >= ${since}
+         GROUP BY s.device
+         ORDER BY score DESC, duration_ms ASC, created_at ASC
+         LIMIT 1000`
+      )
+      .bind(game)
+      .all();
+    return results.map((r, i) => ({ ...r, rank: i + 1 }));
+  }
   const { results } = await db
     .prepare(
       `WITH best AS (
@@ -113,5 +141,7 @@ export async function board(db, game, mode, period) {
 }
 
 export function publicRow(r, device) {
-  return { rank: r.rank, name: r.name, score: r.score, total: r.total, seconds: Math.round(r.duration_ms / 1000), me: r.device === device };
+  const row = { rank: r.rank, name: r.name, score: r.score, total: r.total, seconds: Math.round(r.duration_ms / 1000), me: r.device === device };
+  if (r.count !== undefined) row.puzzles = r.count;
+  return row;
 }

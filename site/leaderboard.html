@@ -12,7 +12,8 @@
 .hud{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 h1{font-size:clamp(2rem,9vw,3rem)}
 .sub{color:var(--muted);font-weight:600}
-.boards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.boards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:560px){.boards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .boards a{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink);background:var(--surface);border:2.5px solid var(--border);border-radius:14px;
   padding:10px 12px;box-shadow:3px 3px 0 var(--shade);font-weight:800;font-size:.9rem;line-height:1.2}
 .boards a small{font-weight:600;color:var(--muted);font-size:.75rem}
@@ -56,6 +57,7 @@ h1{font-size:clamp(2rem,9vw,3rem)}
     <a href="#swipe-quick" data-b="swipe-quick">Swipe<small>Quick · 10 cards</small></a>
     <a href="#swipe-full" data-b="swipe-full">Swipe<small>Full · 32 cards</small></a>
     <a href="#adventure" data-b="adventure">Road to President<small>Fewest slip-ups</small></a>
+    <a href="#crossword" data-b="crossword">Crossword<small>Total points, all puzzles</small></a>
   </nav>
   <div class="bar">
     <div class="seg" role="group" aria-label="Time period">
@@ -65,7 +67,7 @@ h1{font-size:clamp(2rem,9vw,3rem)}
     <span class="meta" id="meta"></span>
   </div>
   <section class="panel" id="board" aria-live="polite"></section>
-  <p class="sub">Each player's best score counts. Ties go to the faster time.</p>
+  <p class="sub" id="note"></p>
 </div>
 <script src="player.js"></script>
 <script>
@@ -74,13 +76,15 @@ JCIPlayer.chip($("player"));
 const BOARDS={
   "swipe-quick":{game:"swipe",mode:"quick",play:"swipe.html"},
   "swipe-full":{game:"swipe",mode:"full",play:"swipe.html"},
-  "adventure":{game:"adventure",mode:"story",play:"adventure.html"}
+  "adventure":{game:"adventure",mode:"story",play:"adventure.html"},
+  "crossword":{game:"crossword",mode:"total",play:"words.html"}
 };
 let period="week";
 try{if(localStorage.getItem("jci-board-period")==="all")period="all"}catch(e){}
 function current(){const h=location.hash.slice(1);return BOARDS[h]?h:"swipe-quick"}
 function time(s){return s<60?s+"s":Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 function result(r,lower){
+  if(r.puzzles!==undefined)return `<b>${r.score} pts</b><small>${r.puzzles} puzzle${r.puzzles>1?"s":""} · ${time(r.seconds)}</small>`;
   return lower?`<b>${r.score}</b><small>${r.score===1?"slip-up":"slip-ups"} · ${time(r.seconds)}</small>`
               :`<b>${r.score}/${r.total}</b><small>${time(r.seconds)}</small>`;
 }
@@ -95,6 +99,7 @@ let seq=0;
 function load(quiet){
   const key=current(),b=BOARDS[key],my=++seq;
   document.querySelectorAll(".boards a").forEach(a=>a.setAttribute("aria-current",a.dataset.b===key));
+  $("note").textContent=key==="crossword"?"Points from each player's first finish of every puzzle, added up. Ties go to the faster total time.":"Each player's best score counts. Ties go to the faster time.";
   $("p-week").setAttribute("aria-pressed",period==="week");$("p-all").setAttribute("aria-pressed",period==="all");
   if(quiet!==true){skeleton();$("meta").textContent=""}
   JCIPlayer.leaderboard({game:b.game,mode:b.mode,period}).then(d=>{

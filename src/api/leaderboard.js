@@ -7,8 +7,8 @@ export async function onRequestGet({ request, env }) {
   const game = q.get("game") || "swipe";
   const g = GAMES[game];
   if (!g) return fail(400, "game");
-  const mode = q.get("mode") || Object.keys(g.modes)[0];
-  if (!g.modes[mode]) return fail(400, "mode");
+  const mode = g.board === "total" ? "total" : q.get("mode") || Object.keys(g.modes)[0];
+  if (g.board !== "total" && !g.modes[mode]) return fail(400, "mode");
   const period = q.get("period") === "all" ? "all" : "week";
   const device = deviceFrom(request);
 

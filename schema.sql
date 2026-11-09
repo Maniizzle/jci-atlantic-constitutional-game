@@ -13,9 +13,10 @@ CREATE TABLE IF NOT EXISTS players (
 -- One row per finished game.
 -- swipe:     score = correct answers, total = cards played (10 or 32)
 -- adventure: score = slip-ups (lower is better), total = scenes (12)
+-- crossword: score = points on one puzzle (mode = puzzle id), first finish only
 CREATE TABLE IF NOT EXISTS scores (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
-  game        TEXT    NOT NULL CHECK (game IN ('swipe','adventure')),
+  game        TEXT    NOT NULL,                 -- swipe | adventure | crossword (checked by the server)
   mode        TEXT    NOT NULL DEFAULT 'quick',
   name        TEXT    NOT NULL CHECK (length(name) BETWEEN 2 AND 24),
   score       INTEGER NOT NULL,
