@@ -10,7 +10,7 @@ Three quick games that teach the JCI Atlantic 2022 Constitution & Policy Manual:
 | `/words.html` | **Crossword & Bingo**: solo crossword, plus bingo for General Assemblies |
 | `/leaderboard.html` | **Leaderboard**: best score per player, last 7 days or all time |
 
-Plain HTML, CSS and JavaScript with no build step. On Cloudflare Pages, a small API in `functions/` adds claimed player names and a leaderboard, stored in Cloudflare D1. Without that API (for example on Salus or any static host), the games still work and the leaderboard simply stays hidden.
+Plain HTML, CSS and JavaScript with no build step. On Cloudflare (Workers), a small API in `src/` adds claimed player names and a leaderboard, stored in Cloudflare D1. Without that API (for example on Salus or any static host), the games still work and the leaderboard simply stays hidden.
 
 ## Project layout
 
@@ -21,8 +21,10 @@ site/            the website (everything public lives here)
   player.js      player name + leaderboard client (shared by all pages)
   theme.css      shared look (colours, buttons, cards)
   404.html       favicon.svg
-functions/api/   Cloudflare Pages Functions: name.js, score.js, leaderboard.js
-lib/api.js       shared server rules: name checks, score limits, ranking
+src/worker.js    Cloudflare Worker: /api/* to the API, everything else from site/
+src/api/         name.js, score.js, leaderboard.js
+src/lib.js       shared server rules: name checks, score limits, ranking
+wrangler.jsonc   Worker config: name, site folder, D1 database binding
 schema.sql       D1 tables (players, scores)
 nginx.conf       web server config: port 8080, caching, security headers, /healthz
 Dockerfile       container image Salus builds and runs
@@ -44,18 +46,19 @@ docker build -t jci-games .
 docker run --rm -p 8080:8080 jci-games
 ```
 
-## Deploy on Cloudflare Pages (recommended)
+## Deploy on Cloudflare Workers (recommended)
 
-1. Workers & Pages → Create → Pages → Connect to Git → this repo.
-2. Production branch `master`. Framework preset **None**, build command empty, output directory **`site`**.
-   The `functions/` folder at the repo root is picked up automatically.
+The Worker `jci-atlantic-constitutional-game` is connected to this repo (Workers Builds).
+Every push to `master` runs `npx wrangler deploy`, which reads `wrangler.jsonc`.
 
-### Leaderboard database (D1)
+- `assets.directory` is `./site`, so the website files are served from there.
+- `d1_databases` connects the `jci-games` database as `DB`. No dashboard binding is needed.
+- The `name` in `wrangler.jsonc` must stay the same as the Worker's name in the dashboard.
 
-1. Storage & Databases → **D1** → Create database `jci-games`.
+### Leaderboard database (D1), one-time
+
+1. Storage & Databases → **D1** → database `jci-games` (its ID is in `wrangler.jsonc`).
 2. Open it → **Console**, paste the contents of `schema.sql`, run. (Safe to run again; it only creates what's missing.)
-3. Pages project → **Settings → Bindings → Add → D1 database**. Variable name **`DB`**, database `jci-games`. Add it to Production (and Preview if you use preview deploys).
-4. Redeploy (push a commit, or Deployments → Retry).
 
 ### How names and scores are protected
 
@@ -87,23 +90,9 @@ DELETE FROM players WHERE name_key = 'amakao';
 
 ### Run the API locally
 
-Create a `wrangler.toml` for local use only (it's git-ignored; if it were committed, Cloudflare would use it instead of the dashboard bindings):
-
-```toml
-name = "jci-local"
-pages_build_output_dir = "site"
-compatibility_date = "2024-09-23"
-[[d1_databases]]
-binding = "DB"
-database_name = "jci-games"
-database_id = "00000000-0000-0000-0000-000000000000"
-```
-
-Then:
-
 ```bash
-npx wrangler d1 execute jci-games --local --file schema.sql
-npx wrangler pages dev        # http://localhost:8788
+npx wrangler d1 execute jci-games --local --file schema.sql   # local test database
+npx wrangler dev                                               # http://localhost:8787
 ```
 
 ## Deploy on Salus
@@ -138,5 +127,5 @@ Commit and push, and Salus redeploys.
 
 ## Planned next
 
-- "Ask the Constitution" chat (Gemini API behind a Pages Function)
+- "Ask the Constitution" chat (Gemini API behind the Worker)
 - Live bingo mode (Durable Objects)

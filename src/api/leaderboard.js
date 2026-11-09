@@ -1,5 +1,5 @@
 // GET /api/leaderboard?game=swipe&mode=quick&period=week -> top players (best score each)
-import { json, fail, deviceFrom, needDb, GAMES, LIMITS, board, publicRow } from "../../lib/api.js";
+import { json, fail, deviceFrom, needDb, GAMES, LIMITS, board, publicRow } from "../lib.js";
 
 export async function onRequestGet({ request, env }) {
   const noDb = needDb(env); if (noDb) return noDb;

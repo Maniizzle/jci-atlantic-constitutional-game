@@ -1,5 +1,5 @@
 // POST /api/score {game, mode, score, total, duration_ms} -> save one finished game
-import { json, fail, deviceFrom, sameOrigin, readJson, needDb, GAMES, LIMITS, board } from "../../lib/api.js";
+import { json, fail, deviceFrom, sameOrigin, readJson, needDb, GAMES, LIMITS, board } from "../lib.js";
 
 const MAX_MS = 3 * 60 * 60 * 1000;
 const int = (v) => (Number.isInteger(v) ? v : NaN);

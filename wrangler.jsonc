@@ -1,0 +1,19 @@
+// Cloudflare Worker config. Workers Builds runs `npx wrangler deploy` on every push to master.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "jci-atlantic-constitutional-game",   // must match the Worker's name in the dashboard
+  "main": "src/worker.js",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./site",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "jci-games",
+      "database_id": "e82da9d2-0f2c-458f-93bb-c579649591d2"
+    }
+  ],
+  "observability": { "enabled": true }
+}

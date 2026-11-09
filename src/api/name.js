@@ -1,6 +1,6 @@
 // GET  /api/name?name=Amaka   -> is this name free for me?
 // POST /api/name {name}        -> claim (or change to) this name for my device
-import { json, fail, deviceFrom, cleanName, nameKey, nameProblem, sameOrigin, readJson, needDb } from "../../lib/api.js";
+import { json, fail, deviceFrom, cleanName, nameKey, nameProblem, sameOrigin, readJson, needDb } from "../lib.js";
 
 async function owner(db, key) {
   const row = await db.prepare("SELECT device FROM players WHERE name_key = ?1").bind(key).first();
