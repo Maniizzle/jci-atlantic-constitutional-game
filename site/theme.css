@@ -92,3 +92,15 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(-
 .name-err{color:var(--coral);font-weight:800;font-size:.88rem}
 .name-body .row{margin-top:6px}
 html.name-open{overflow:hidden}
+.name-status{min-height:1.4em;font-weight:700;font-size:.9rem;color:var(--muted)}
+.name-status.good{color:var(--mint)}
+.name-status.bad{color:var(--coral)}
+.suggs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px;color:var(--muted);font-size:.85rem}
+.sugg{border:2px solid var(--border);border-radius:99px;padding:3px 10px;background:var(--surface);color:var(--ink);font-weight:800;font-size:.82rem;box-shadow:2px 2px 0 var(--shade)}
+.sugg:hover{background:var(--gold-soft)}
+
+/* results: leaderboard status line */
+.saved{font-weight:700;font-size:.92rem;color:var(--muted);background:var(--surface-2);border:2px dashed var(--soft);border-radius:12px;padding:8px 12px}
+.saved b{color:var(--ink);font-family:var(--display)}
+.saved a{color:var(--blue);font-weight:800}
+.board-link{display:block;text-align:center;text-decoration:none}

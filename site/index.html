@@ -61,6 +61,16 @@
 .t3 .cw i.k{background:var(--border)}
 .t3 .cw i.g{background:var(--gold);color:var(--on-color)}
 
+.lb{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:18px;text-decoration:none;color:var(--ink);background:var(--surface);
+  border:2.5px solid var(--border);border-radius:22px;box-shadow:6px 6px 0 var(--shade);padding:16px 20px;transition:transform .12s,box-shadow .12s}
+.lb:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 var(--shade)}
+.lb .lbt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.lb b{font-family:var(--display);font-weight:800;font-size:1.15rem;letter-spacing:-.03em;line-height:1.15}
+.lb small{color:var(--muted);font-weight:600}
+.cup{width:56px;height:56px;border-radius:16px;background:var(--gold);border:2.5px solid var(--border);display:grid;place-items:center;box-shadow:3px 3px 0 var(--shade)}
+.cup i{display:block;width:24px;height:20px;background:var(--surface);border:2.5px solid var(--border);border-radius:0 0 12px 12px;position:relative}
+.cup i::after{content:"";position:absolute;left:50%;bottom:-11px;width:16px;height:6px;margin-left:-8px;background:var(--border);border-radius:2px}
+@media (max-width:520px){.lb{grid-template-columns:auto minmax(0,1fr)}.lb .go{grid-column:1/-1;justify-self:start}}
 .foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:.85rem;border-top:2px dashed var(--soft);padding-top:18px}
 </style>
 </head><body>
@@ -106,12 +116,19 @@
     </a>
   </section>
 
+  <a class="lb" href="leaderboard.html">
+    <span class="cup" aria-hidden="true"><i></i></span>
+    <span class="lbt"><span class="label">Leaderboard</span><b>Who knows the constitution best?</b><small>Top scores for Swipe and Road to President, updated live.</small></span>
+    <span class="go">View →</span>
+  </a>
+
   <div class="foot"><span>Based on the JCI Atlantic Constitution, as amended at the AGM on 27 November 2022.</span><span class="tape"><b>GROW</b> · IMPACT · <b>LEAD</b></span></div>
 </div>
 <script src="player.js"></script>
 <script>
 try{const b=localStorage.getItem("jci-best");if(b)document.getElementById("best").textContent="Your best: "+b}catch(e){}
 JCIPlayer.chip(document.getElementById("player"));
+JCIPlayer.sync();
 // Ask for a name the first time someone picks a game
 document.querySelectorAll(".tile").forEach(function(a){a.addEventListener("click",function(e){
   if(JCIPlayer.name())return;

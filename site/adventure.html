@@ -150,7 +150,7 @@ const SCENES=[
 
 const $=id=>document.getElementById(id);
 const view=$("view");
-let n=0,slips=0;
+let n=0,slips=0,t0=0;
 function shuffle(a){a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a}
 function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
 function ladder(stage){
@@ -167,7 +167,7 @@ function intro(){
     <button class="main" id="go">Start my journey</button>
     <div class="sash"><b>GROW</b> · IMPACT · <b>LEAD</b></div>
   </div></section>`;
-  $("go").onclick=()=>JCIPlayer.require(()=>{n=0;slips=0;$("slips").hidden=false;$("slipN").textContent=0;scene()});
+  $("go").onclick=()=>JCIPlayer.require(()=>{n=0;slips=0;t0=Date.now();$("slips").hidden=false;$("slipN").textContent=0;scene()});
 }
 
 function scene(){
@@ -208,10 +208,13 @@ function finale(){
   <h1>${JCIPlayer.name()?esc(JCIPlayer.name())+", you're the ":"You're the "}<em>President</em></h1>
   <p>The Nomination Committee announces the result to the General Assembly, and you take the oath of office. Your term starts on 1 January.</p>
   <div><span class="label">Slip-ups on the way</span><div class="big">${slips}</div></div>
+  <p class="saved" id="saved">Saving to the leaderboard…</p>
   <p>${verdict}</p>
   <div class="row"><button class="main" id="ag">Play again</button></div>
   <div class="sash"><b>GROW</b> · IMPACT · <b>LEAD</b></div></div></section>`;
   $("ag").onclick=intro;
+  JCIPlayer.submitScore({game:"adventure",mode:"story",score:slips,total:SCENES.length,duration_ms:Date.now()-t0})
+    .then(r=>JCIPlayer.scoreLine($("saved"),r,"leaderboard.html#adventure"));
 }
 intro();
 </script>

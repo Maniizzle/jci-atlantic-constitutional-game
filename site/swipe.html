@@ -139,7 +139,7 @@ const TWINS={
 const RANKS=[[0,"Intending Member"],[40,"Inducted Member"],[60,"Board Director"],[80,"Vice President"],[100,"President"]];
 const $=id=>document.getElementById(id);
 const view=$("view"),controls=$("controls");
-let deck=[],i=0,score=0,missed=[],answered=false,mode="quick";
+let deck=[],i=0,score=0,missed=[],answered=false,mode="quick",t0=0;
 
 function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
 function shuffle(a){a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a}
@@ -156,6 +156,7 @@ function home(){
     <div class="stack">
       <button class="b-main" id="q">Quick round · 10 cards</button>
       <button class="b-ghost" id="f">Full constitution · ${CARDS.length} cards</button>
+      <a class="b-ghost board-link" href="leaderboard.html#swipe-quick">See the leaderboard</a>
     </div>
     ${best?`<div class="best">Your best: ${esc(best)}</div>`:""}
     <div class="mantra"><b>GROW</b> · IMPACT · <b>LEAD</b></div>
@@ -180,7 +181,7 @@ function start(m){
     if(tw&&Math.random()<.5)return [c[0],tw[0],tw[1],tw[2],c[4]];
     return c;
   });
-  i=0;score=0;missed=[];$("score").hidden=false;$("barWrap").hidden=false;show();
+  i=0;score=0;missed=[];t0=Date.now();$("score").hidden=false;$("barWrap").hidden=false;show();
 }
 
 function show(){
@@ -240,12 +241,16 @@ function finish(){
   view.innerHTML=`<section class="panel">
     <div class="eyebrow">${JCIPlayer.name()?"Well played, "+esc(JCIPlayer.name()):"Round complete"}</div>
     <div class="big">${score}<small> / ${deck.length}</small></div>
+    <p class="saved" id="saved">Saving to the leaderboard…</p>
     <div><div class="answer">Your rank</div><div class="rank">${RANKS[r][1]}</div></div>
     <ul class="ladder">${RANKS.slice().reverse().map((x,k)=>`<li class="${RANKS.length-1-k===r?"on":""}"><span>${x[1]}</span><span>${x[0]}%+</span></li>`).join("")}</ul>
     ${missed.length?`<div class="missed"><h3>Worth another read</h3>${missed.map(m=>`<div><b>${esc(m[4])}</b>${esc(m[3])}</div>`).join("")}</div>`:`<p>A perfect round. The General Legal Counsel would be proud.</p>`}
   </section>`;
   controls.innerHTML=`<button class="b-ghost" id="hm">Home</button><button class="b-main" id="ag">Play again</button>`;
   $("hm").onclick=home;$("ag").onclick=()=>start(mode);
+  const boardHref="leaderboard.html#swipe-"+mode;
+  JCIPlayer.submitScore({game:"swipe",mode,score,total:deck.length,duration_ms:Date.now()-t0})
+    .then(r=>JCIPlayer.scoreLine($("saved"),r,boardHref));
 }
 
 document.addEventListener("keydown",e=>{
