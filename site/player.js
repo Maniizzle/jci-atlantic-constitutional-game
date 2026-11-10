@@ -147,44 +147,55 @@
     return claim(n);
   }
 
-  // ---- scores ----
-  // Returns {ok, week:{rank,of,best}, all:{...}} or {ok:false, error}
-  function submitScore(s,retry){
+  // ---- rounds (the server holds the answers and marks every move) ----
+  // Make sure the name is claimed on the server, so the round can be official.
+  function ensureName(){
     return syncLocalName().then(function(r){
-      if(!r.ok&&r.error==="taken"){
-        return new Promise(function(resolve){
-          ask(function(){resolve(submitScore(s,true))},
-            "Someone else already uses “"+name()+"” on the leaderboard. Pick another name to save your score.",
-            function(){resolve({ok:false,error:"no-name"})});
-        });
-      }
-      if(api.available===false)return {ok:false,error:"unavailable"};
-      return call("/api/score",s).then(function(res){
-        if(res.data.error==="no-name"&&!retry){sset(K.reg,"");return submitScore(s,true)}
-        return res.data;
+      if(r.ok||r.error!=="taken")return true;
+      return new Promise(function(resolve){
+        ask(function(){resolve(true)},
+          "Someone else already uses \u201c"+name()+"\u201d on the leaderboard. Pick another name so your scores count.",
+          function(){resolve(true)});
       });
     });
   }
+  var round={
+    start:function(game,mode,extra){
+      var body={game:game,mode:mode};if(extra)for(var k in extra)body[k]=extra[k];
+      return ensureName().then(function(){return call("/api/round/start",body)}).then(function(r){return r.data});
+    },
+    act:function(id,body){
+      var b={round:id};for(var k in body)b[k]=body[k];
+      return call("/api/round/act",b).then(function(r){return r.data});
+    },
+    status:function(game){return call("/api/round/status?game="+encodeURIComponent(game)).then(function(r){return r.data})}
+  };
   function leaderboard(q){
     return call("/api/leaderboard?"+new URLSearchParams(q).toString()).then(function(res){return res.data});
   }
 
-  // A small status line for results screens
+  // Message shown when a round can't start or a move fails
+  function problem(err){
+    return err==="slow-down"?"You've played a lot in the last hour. Take a short break and try again.":
+      err==="offline"?"You're offline. Connect to the internet to play.":
+      err==="unavailable"||err==="not-configured"?"The game server isn't reachable right now. Please try again later.":
+      err==="finished"?"This round has already ended.":
+      "Something went wrong. Please try again.";
+  }
+
+  // Status line on results screens. result comes from the server when a round ends.
   function scoreLine(el,result,boardHref){
     if(!el)return;
-    if(!result||!result.ok){
-      var e=result&&result.error;
-      el.innerHTML=e==="unavailable"||e==="not-configured"?"":
-        e==="slow-down"?"Score not saved: too many games in the last hour. Take a short break.":
-        e==="offline"?"Score not saved: you're offline.":
-        e==="no-name"?"Score not saved: no name picked.":
-        e==="duration"?"Score not saved: that was too fast to count.":
-        "Score not saved this time.";
-      el.hidden=!el.innerHTML;return;
+    var link=' \u00b7 <a href="'+boardHref+'">See leaderboard \u2192</a>';
+    if(!result){el.hidden=true;return}
+    if(!result.official){el.innerHTML="Practice round: not saved. Your official score stays on the board."+link;el.hidden=false;return}
+    if(!result.saved){
+      el.innerHTML=result.reason==="too-fast"?"This round didn\u2019t count: it was finished too fast.":
+        result.reason==="no-name"?"This round didn\u2019t count: no name was set.":"Score not saved.";
+      el.hidden=false;return;
     }
-    var w=result.week;
-    el.innerHTML=(w?'You’re <b>#'+w.rank+'</b> of '+w.of+' this week':'Saved to the leaderboard')+
-      ' · <a href="'+boardHref+'">See leaderboard →</a>';
+    var m=result.month;
+    el.innerHTML=(m?'You\u2019re <b>#'+m.rank+'</b> of '+m.of+' this month':'Saved to the leaderboard')+link;
     el.hidden=false;
   }
 
@@ -197,5 +208,5 @@
   }
 
   device();
-  window.JCIPlayer={name:name,ask:ask,require:require,chip:chip,esc:esc,submitScore:submitScore,leaderboard:leaderboard,scoreLine:scoreLine,sync:syncLocalName};
+  window.JCIPlayer={name:name,ask:ask,require:require,chip:chip,esc:esc,round:round,leaderboard:leaderboard,scoreLine:scoreLine,problem:problem,sync:syncLocalName};
 })();

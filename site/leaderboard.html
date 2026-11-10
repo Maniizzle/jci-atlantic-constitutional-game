@@ -57,11 +57,11 @@ h1{font-size:clamp(2rem,9vw,3rem)}
     <a href="#swipe-quick" data-b="swipe-quick">Swipe<small>Quick · 10 cards</small></a>
     <a href="#swipe-full" data-b="swipe-full">Swipe<small>Full · 32 cards</small></a>
     <a href="#adventure" data-b="adventure">Road to President<small>Fewest slip-ups</small></a>
-    <a href="#crossword" data-b="crossword">Crossword<small>Total points, all puzzles</small></a>
+    <a href="#crossword" data-b="crossword">Crossword<small>Points, all puzzles</small></a>
   </nav>
   <div class="bar">
     <div class="seg" role="group" aria-label="Time period">
-      <button type="button" id="p-week" aria-pressed="true">Last 7 days</button>
+      <button type="button" id="p-month" aria-pressed="true">This month</button>
       <button type="button" id="p-all" aria-pressed="false">All time</button>
     </div>
     <span class="meta" id="meta"></span>
@@ -79,12 +79,24 @@ const BOARDS={
   "adventure":{game:"adventure",mode:"story",play:"adventure.html"},
   "crossword":{game:"crossword",mode:"total",play:"words.html"}
 };
-let period="week";
+let period="month";
+const MONTH=new Date().toLocaleString("en-GB",{month:"long",timeZone:"Africa/Lagos"});
 try{if(localStorage.getItem("jci-board-period")==="all")period="all"}catch(e){}
+const NOTES={
+  "swipe-quick":{month:"Each player's first quick round this month. Replays are practice. Ties go to the faster time.",
+                 all:"Official monthly rounds added up: one quick round per month counts."},
+  "swipe-full":{month:"Each player's first full round this month. Replays are practice. Ties go to the faster time.",
+                all:"Official monthly rounds added up: one full round per month counts."},
+  "adventure":{month:"Official runs finished this month. Only each player's first run ever counts.",
+               all:"Each player's first run ever. Fewest slip-ups wins; ties go to the faster time."},
+  "crossword":{month:"Points from official puzzle finishes this month, added up.",
+               all:"Points from each player's first finish of every puzzle, added up. Ties go to the faster total time."}
+};
 function current(){const h=location.hash.slice(1);return BOARDS[h]?h:"swipe-quick"}
 function time(s){return s<60?s+"s":Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 function result(r,lower){
-  if(r.puzzles!==undefined)return `<b>${r.score} pts</b><small>${r.puzzles} puzzle${r.puzzles>1?"s":""} · ${time(r.seconds)}</small>`;
+  if(r.count!==undefined&&current()==="crossword")return `<b>${r.score} pts</b><small>${r.count} puzzle${r.count>1?"s":""} · ${time(r.seconds)}</small>`;
+  if(r.count!==undefined)return `<b>${r.score}/${r.total}</b><small>${r.count} month${r.count>1?"s":""} · ${time(r.seconds)}</small>`;
   return lower?`<b>${r.score}</b><small>${r.score===1?"slip-up":"slip-ups"} · ${time(r.seconds)}</small>`
               :`<b>${r.score}/${r.total}</b><small>${time(r.seconds)}</small>`;
 }
@@ -99,8 +111,8 @@ let seq=0;
 function load(quiet){
   const key=current(),b=BOARDS[key],my=++seq;
   document.querySelectorAll(".boards a").forEach(a=>a.setAttribute("aria-current",a.dataset.b===key));
-  $("note").textContent=key==="crossword"?"Points from each player's first finish of every puzzle, added up. Ties go to the faster total time.":"Each player's best score counts. Ties go to the faster time.";
-  $("p-week").setAttribute("aria-pressed",period==="week");$("p-all").setAttribute("aria-pressed",period==="all");
+  $("note").textContent=NOTES[key][period];
+  $("p-month").setAttribute("aria-pressed",period==="month");$("p-all").setAttribute("aria-pressed",period==="all");
   if(quiet!==true){skeleton();$("meta").textContent=""}
   JCIPlayer.leaderboard({game:b.game,mode:b.mode,period}).then(d=>{
     if(my!==seq)return;
@@ -113,14 +125,14 @@ function load(quiet){
     }
     $("meta").textContent=d.players?`${d.players} player${d.players>1?"s":""}`:"";
     if(!d.top.length){
-      $("board").innerHTML=`<div class="empty"><h2>No scores ${period==="week"?"in the last 7 days":"yet"}</h2>
+      $("board").innerHTML=`<div class="empty"><h2>No scores ${period==="month"?"in "+MONTH+" yet":"yet"}</h2>
         <p class="muted">Be the first name on the board.</p><a class="btn main" style="text-decoration:none" href="${b.play}">Play now →</a></div>`;
       return;
     }
     $("board").innerHTML=`<ul class="list">${d.top.map(r=>row(r,d.lowerIsBetter)).join("")}${d.me?`<li class="gap">···</li>${row(d.me,d.lowerIsBetter)}`:""}</ul>`;
   });
 }
-$("p-week").onclick=()=>{period="week";try{localStorage.setItem("jci-board-period",period)}catch(e){}load()};
+$("p-month").onclick=()=>{period="month";try{localStorage.setItem("jci-board-period",period)}catch(e){}load()};
 $("p-all").onclick=()=>{period="all";try{localStorage.setItem("jci-board-period",period)}catch(e){}load()};
 addEventListener("hashchange",()=>load());
 document.addEventListener("jci-name",()=>setTimeout(load,300));

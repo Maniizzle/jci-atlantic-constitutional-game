@@ -67,6 +67,11 @@ html,body{height:100%}
 .missed h3{margin:0;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted)}
 .missed div{font-size:.92rem}
 .missed div b{display:inline-block;margin-bottom:2px;font-size:.75rem;background:var(--gold);color:var(--on-color);border:2px solid var(--border);border-radius:99px;padding:1px 9px}
+.tag{align-self:flex-start;display:inline-block;font-size:.7rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;border:2px solid var(--border);border-radius:99px;padding:2px 10px}
+.tag.off{background:var(--gold);color:var(--on-color)} .tag.prac{background:var(--surface-2);color:var(--muted)}
+.stack button small{display:block;font-family:var(--body);font-weight:600;font-size:.78rem;opacity:.85;margin-top:2px}
+.stack button small:empty{display:none}
+.rule{font-size:.85rem}
 .best{font-size:.88rem;font-weight:700;color:var(--muted);text-align:center}
 </style></head><body>
 <div class="app">
@@ -82,116 +87,64 @@ html,body{height:100%}
 <script src="player.js"></script>
 <script>
 JCIPlayer.chip(document.getElementById("player"));
-const CARDS=[
- ["Vision & Purpose","JCI Atlantic's mantra is Grow | Impact | Lead.",true,"That's the one. Three words every member should know by heart.","Article 5-4"],
- ["Vision & Purpose","Zero Hunger is one of JCI Atlantic's five focal points.",true,"The five are Quality Education, Entrepreneurial Growth, Zero Hunger, Continued Innovation and Leadership Development Opportunities.","Article 5-3"],
- ["Vision & Purpose","JCI Atlantic can back a political party if most members agree.",false,"The LO must stay away from all partisan politics, and members keep their personal political activity separate from JCI.","Article 5-6"],
- ["Membership","You must be between 18 and 40 years old to be a member.",true,"Age limits are 18 to 40. Your membership runs until the end of the calendar year you turn 40.","Article 6-2"],
- ["Membership","Your membership ends on your 40th birthday.",false,"It continues until the end of the calendar year in which you turn 40.","Article 6-2"],
- ["Membership","Applications for the September induction close on 20 February.",true,"Applications go by email to the President through the Director of HR & Welfare, and none are received after 20 February.","Bylaw 6-3"],
- ["Membership","The probationary period lasts a minimum of three months.",false,"It's at least six months. Three months is only for reactivated members.","Bylaw 6-4"],
- ["Membership","Intending members must attend at least three General Assemblies during probation.",true,"Plus two JCI Atlantic projects, one JCI Nigeria event in Lagos, the intending members training, and paying dues.","Bylaw 6-4"],
- ["Membership","At induction, it's fine to read the JCI Creed from a card.",false,"Intending members recite the Creed off hand, then take the oath.","Article 6-5"],
- ["Membership","Newly inducted members can vote for officers at that year's AGM.",false,"New inductees can't vote for elected officers at the AGM of the year they were inducted.","Bylaw 6-7"],
- ["Membership","Ten straight months of inactivity gets your membership suspended.",true,"At 18 months of inactivity, membership is withdrawn.","Article 6-10"],
- ["Membership","Skipping dues for two years in a row is fine if you attend every event.",false,"Membership is withdrawn after two consecutive years of unpaid dues, regardless of attendance.","Article 6-10"],
- ["General Assembly","The General Assembly is the supreme authority of JCI Atlantic.",true,"It controls the LO's affairs and keeps every power not specifically given to the Board or an officer.","Article 7-1"],
- ["General Assembly","You can vote by proxy if you send a letter to the Secretary.",false,"Proxies are not recognized. Nobody casts more than one vote.","Article 7-7"],
- ["General Assembly","Quorum for a General Assembly is half of the total membership.",false,"Quorum is one-third (1/3) of the total membership.","Article 7-8"],
- ["General Assembly","Notice of a General Assembly must go out at least 14 days before.",true,"The agenda and last minutes follow at least 48 hours before the meeting.","Bylaw 7-9"],
- ["Meetings","Business meetings hold on the 3rd Sunday of every odd month.",true,"January, March, May, July, September and November.","Article 8-1"],
- ["Meetings","Business casual is acceptable at the November AGM.",false,"Dressing to the AGM is strictly formal or traditional. Business casual isn't accepted.","Article 8-1, Sec. 2"],
- ["Meetings","An ordinary member who arrives late without notice pays a 500 naira fine.",true,"Other Board members pay 1,000 naira and Executive Committee members pay 1,500. Late means arriving less than 5 minutes before start time.","Article 8-1, Sec. 5"],
- ["Meetings","Improper dressing costs 1,000 naira and your speaking and voting rights at that meeting.",true,"Both penalties apply together.","Article 8-1, Sec. 5"],
- ["Officers","JCI Atlantic's elected officers are the President and two Vice Presidents.",true,"The VPs cover Administration and Projects. Everyone else on the Board is appointed.","Article 9-1"],
- ["Officers","An officer can hold the same office for two terms in a row.",false,"No officer may hold the same office for more than one term.","Article 9-9"],
- ["Officers","A presidential candidate must have served at least three complete tenures on the Board.",true,"They must also be a VP (past or current) and a member in good standing for at least 35 months.","Article 9-9, Sec. 5"],
- ["Officers","The nomination fee to run for President is 10,000 naira.",true,"It's 5,000 naira for Vice President.","Bylaw 9-6.2"],
- ["Officers","If the President can't continue, the VP Project steps in first.",false,"The VP Administration has the first right of refusal. The VP Project is next.","Bylaw 9-10, Sec. 3"],
- ["Officers","Officers receive a monthly allowance for their service.",false,"All officers serve without financial remuneration.","Bylaw 9-12"],
- ["Board & Exco","A Board of Directors meeting needs at least 60% of its members to form a quorum.",true,"The Executive Committee needs at least 5 of its members.","Bylaw 11-4"],
- ["Board & Exco","The Meeting Manager must have the venue set at least 45 minutes before start time.",true,"Projector, microphones, seats and the rest.","Article 11-6"],
- ["Dues & Benefits","Annual dues must be paid by 31 March.",true,"Miss it without a payment plan and you lose your vote, speaking rights and financial benefits.","Article 15-1"],
- ["Dues & Benefits","The LO gives 40,000 naira when two members marry each other.",true,"A member marrying a non-member receives 15,000 naira.","Bylaw 15-5"],
- ["Amendments","A simple majority at the AGM is enough to amend the constitution.",false,"Amendments need a two-thirds vote, with written notice 30 days before the AGM.","Article 19-1"],
- ["Amendments","Approved amendments take effect immediately after the AGM.",false,"They take effect on 1 January of the following year.","Article 19-3"]
-];
-// Twin versions of the same rule with the opposite answer: card index -> [statement, truth, explanation]
-const TWINS={
- 0:["JCI Atlantic's mantra is Lead | Serve | Inspire.",false,"The mantra is Grow | Impact | Lead."],
- 3:["You can join JCI Atlantic from age 16.",false,"The minimum age is 18, and the maximum is 40."],
- 5:["Applications for the September induction stay open until 31 March.",false,"They close on 20 February. Nothing is received after that date."],
- 6:["The probationary period lasts a minimum of six months.",true,"During it, intending members attend General Assemblies, projects, a JCI Nigeria event and the intending members training."],
- 10:["Membership is suspended after just 3 months of inactivity.",false,"Suspension comes after 10 consecutive months of inactivity, and withdrawal after 18."],
- 13:["Each member present gets one vote, and proxies aren't allowed.",true,"Proxies are not recognized. Nobody casts more than one vote."],
- 14:["Quorum for a General Assembly is one-third of the total membership.",true,"One-third (1/3) of the total membership must be present."],
- 15:["Notice of a General Assembly only needs to go out 7 days before.",false,"It's at least 14 days. Seven days is the notice for a Special General Meeting."],
- 18:["An ordinary member who arrives late without notice pays a 1,500 naira fine.",false,"Ordinary members pay 500 naira. 1,500 naira is the fine for Executive Committee members."],
- 22:["A presidential candidate needs only one complete tenure on the Board.",false,"At least three complete tenures are required, and they must be on the current Board."],
- 23:["The nomination fee to run for President is 5,000 naira.",false,"It's 10,000 naira. 5,000 naira is the fee for Vice President."],
- 24:["If the President can't continue, the VP Administration has the first right to step in.",true,"If the VP Administration declines, the VP Project takes over, subject to approval at the next general meeting."],
- 26:["A Board of Directors meeting needs only half of its members to form a quorum.",false,"Board quorum is at least 60% of its members."],
- 28:["Annual dues must be paid by 31 January.",false,"The deadline is 31 March."],
- 29:["The LO gives 15,000 naira when two members marry each other.",false,"Two members marrying each other receive 40,000 naira. 15,000 naira is for a member marrying a non-member."],
- 30:["Amending the constitution needs a two-thirds vote at the AGM.",true,"Written notice of the amendment must also be given 30 days before the AGM."],
- 31:["Approved amendments take effect on 1 January of the following year.",true,"They need a two-thirds majority of financial members at the AGM first."]
-};
 const RANKS=[[0,"Intending Member"],[40,"Inducted Member"],[60,"Board Director"],[80,"Vice President"],[100,"President"]];
 const $=id=>document.getElementById(id);
 const view=$("view"),controls=$("controls");
-let deck=[],i=0,score=0,missed=[],answered=false,mode="quick",t0=0;
+const MONTH=new Date().toLocaleString("en-GB",{month:"long",timeZone:"Africa/Lagos"});
+let R=null,items=[],i=0,score=0,missed=[],answered=false,mode="quick",official=false,pending=null,result=null;
 
-function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-function shuffle(a){a=a.slice();for(let j=a.length-1;j>0;j--){const r=Math.floor(Math.random()*(j+1));[a[j],a[r]]=[a[r],a[j]]}return a}
-function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function badge(){return official?`<span class="tag off">Official · ${MONTH}</span>`:`<span class="tag prac">Practice</span>`}
 
 function home(){
-  $("score").hidden=true;$("barWrap").hidden=true;
-  const best=store("jci-best");
+  $("score").hidden=true;$("barWrap").hidden=true;R=null;
   view.innerHTML=`<section class="panel">
     <div class="eyebrow">2022 Constitution &amp; Policy Manual</div>
     <h1>How well do you know <em>our constitution?</em></h1>
     <p>Each card is a statement about the JCI Atlantic constitution. Decide if it's true or false, then see what the constitution actually says.</p>
     <div class="how"><div class="l"><strong>← False</strong>Swipe left or press ←</div><div class="r"><strong>True →</strong>Swipe right or press →</div></div>
     <div class="stack">
-      <button class="b-main" id="q">Quick round · 10 cards</button>
-      <button class="b-ghost" id="f">Full constitution · ${CARDS.length} cards</button>
+      <button class="b-main" id="q">Quick round · 10 cards<small id="sq"></small></button>
+      <button class="b-ghost" id="f">Full constitution · 32 cards<small id="sf2"></small></button>
       <a class="b-ghost board-link" href="leaderboard.html#swipe-quick">See the leaderboard</a>
     </div>
-    ${best?`<div class="best">Your best: ${esc(best)}</div>`:""}
+    <p class="rule">Your first round of each type every month is your official score. After that, play as much as you like for practice.</p>
     <div class="mantra"><b>GROW</b> · IMPACT · <b>LEAD</b></div>
   </section>`;
   controls.innerHTML="";
   $("q").onclick=()=>JCIPlayer.require(()=>start("quick"));$("f").onclick=()=>JCIPlayer.require(()=>start("full"));
+  JCIPlayer.round.status("swipe").then(d=>{
+    if(!d||!d.ok)return;
+    const label=m=>{const x=d.modes[m];if(!x)return"";
+      return x.state==="new"?`Official round for ${MONTH}`:x.state==="open"?"Continue your official round":
+        x.score?`Practice · ${MONTH} score ${x.score.score}/${x.score.total}`:"Practice"};
+    if($("sq"))$("sq").textContent=label("quick");if($("sf2"))$("sf2").textContent=label("full");
+  });
+}
+
+function message(text){
+  view.innerHTML=`<section class="panel"><div class="eyebrow">Can't start</div><p>${esc(text)}</p></section>`;
+  controls.innerHTML=`<button class="b-ghost" id="hm">Back</button>`;$("hm").onclick=home;
 }
 
 function start(m){
-  mode=m;
-  let ids=CARDS.map((_,k)=>k);
-  if(m==="quick"){
-    // Prefer cards not yet played; refill the pool once everything has been seen
-    let seen=[];try{seen=JSON.parse(store("jci-seen")||"[]")}catch(e){}
-    let fresh=shuffle(ids.filter(k=>!seen.includes(k)));
-    if(fresh.length<10){seen=[];fresh=fresh.concat(shuffle(ids.filter(k=>!fresh.includes(k))))}
-    ids=fresh.slice(0,10);
-    store("jci-seen",JSON.stringify(seen.concat(ids)));
-  }
-  deck=shuffle(ids).map(k=>{
-    const c=CARDS[k],tw=TWINS[k];
-    if(tw&&Math.random()<.5)return [c[0],tw[0],tw[1],tw[2],c[4]];
-    return c;
+  mode=m;controls.innerHTML="";
+  view.innerHTML=`<section class="panel"><div class="eyebrow">Shuffling the cards…</div></section>`;
+  JCIPlayer.round.start("swipe",m).then(d=>{
+    if(!d||!d.ok){message(JCIPlayer.problem(d&&d.error));return}
+    R=d.round;items=d.items;i=d.index;score=d.score;official=d.official;missed=[];result=null;
+    $("score").hidden=false;$("barWrap").hidden=false;show();
   });
-  i=0;score=0;missed=[];t0=Date.now();$("score").hidden=false;$("barWrap").hidden=false;show();
 }
 
 function show(){
-  answered=false;
-  $("scoreN").textContent=score;$("bar").style.width=(i/deck.length*100)+"%";
-  const [ch,q]=deck[i],next=deck[i+1];
-  view.innerHTML=(next?`<div class="card under"><div class="card-top"><span class="ch">${esc(next[0])}</span></div><div class="card-body"></div></div>`:"")+
-  `<div class="card" id="card"><div class="card-top"><span class="ch">${esc(ch)}</span><span class="num">${i+1} / ${deck.length}</span></div>
+  answered=false;pending=null;
+  $("scoreN").textContent=score;$("bar").style.width=(i/items.length*100)+"%";
+  const it=items[i],next=items[i+1];
+  view.innerHTML=(next?`<div class="card under"><div class="card-top"><span class="ch">${esc(next.ch)}</span></div><div class="card-body"></div></div>`:"")+
+  `<div class="card" id="card"><div class="card-top"><span class="ch">${esc(it.ch)}</span><span class="num">${i+1} / ${items.length}</span></div>
    <div class="card-body" id="cb"><span class="stamp t" id="st">TRUE</span><span class="stamp f" id="sf">FALSE</span>
-   <div class="q">${esc(q)}</div><div class="hint">True or false?</div></div></div>`;
+   ${badge()}<div class="q">${esc(it.q)}</div><div class="hint">True or false?</div></div></div>`;
   controls.innerHTML=`<button class="b-false" id="bf">✕ False</button><button class="b-true" id="bt">✓ True</button>`;
   $("bf").onclick=()=>fling(false);$("bt").onclick=()=>fling(true);
   drag($("card"));
@@ -211,46 +164,49 @@ function drag(card){
 
 function fling(guess){
   if(answered)return;answered=true;
-  const card=$("card"),[ch,q,truth,why,art]=deck[i],ok=guess===truth;
-  if(ok)score++;else missed.push(deck[i]);
-  $("scoreN").textContent=score;
-  const dir=guess?1:-1;
+  const card=$("card"),q=items[i].q,dir=guess?1:-1;
+  const marked=JCIPlayer.round.act(R,{answer:guess});      // the server marks the answer
+  const anim=new Promise(r=>setTimeout(r,220));
   card.style.transition="transform .22s ease-in, opacity .22s";
   card.style.transform=`translateX(${dir*120}px) rotate(${dir*8}deg)`;card.style.opacity="0";
-  setTimeout(()=>{
+  Promise.all([marked,anim]).then(([d])=>{
     card.style.transition="none";card.style.transform="scale(.96)";card.style.opacity="1";
-    $("cb").innerHTML=`<div class="verdict ${ok?"ok":"no"}">${ok?"✓ Correct":"✕ Not quite"}</div>
-      <div class="answer">The statement is ${truth?"true":"false"}</div>
+    if(!d||!d.ok){
+      $("cb").innerHTML=`<div class="verdict no">Not sent</div><p>${esc(JCIPlayer.problem(d&&d.error))}</p>`;
+      controls.innerHTML=`<button class="b-main" id="nx">Try this card again</button>`;$("nx").onclick=show;
+      requestAnimationFrame(()=>{card.style.transition="transform .25s";card.style.transform=""});return;
+    }
+    score=d.score;$("scoreN").textContent=score;
+    if(!d.correct)missed.push(d);
+    if(d.result)result=d.result;
+    $("cb").innerHTML=`<div class="verdict ${d.correct?"ok":"no"}">${d.correct?"✓ Correct":"✕ Not quite"}</div>
+      <div class="answer">The statement is ${d.truth?"true":"false"}</div>
       <div class="q" style="font-size:1.1rem;color:var(--muted)">${esc(q)}</div>
-      <div class="explain">${esc(why)}</div><span class="cite">${esc(art)}</span>`;
+      <div class="explain">${esc(d.why)}</div><span class="cite">${esc(d.art)}</span>`;
     requestAnimationFrame(()=>{card.style.transition="transform .25s";card.style.transform=""});
-    controls.innerHTML=`<button class="b-main" id="nx">${i+1<deck.length?"Next card →":"See my rank →"}</button>`;
+    controls.innerHTML=`<button class="b-main" id="nx">${result?"See my rank →":"Next card →"}</button>`;
     $("nx").onclick=nextCard;$("nx").focus();
-  },220);
+  });
 }
 
-function nextCard(){i++;if(i<deck.length)show();else finish()}
+function nextCard(){i++;if(result)finish();else show()}
 
 function finish(){
   $("bar").style.width="100%";
-  const pct=Math.round(score/deck.length*100);
+  const total=result.total,pct=Math.round(result.score/total*100);
   let r=0;RANKS.forEach((x,k)=>{if(pct>=x[0])r=k});
-  const label=`${score}/${deck.length} (${RANKS[r][1]})`;
-  const prev=store("jci-best-pct");
-  if(prev===null||pct>+prev){store("jci-best-pct",pct);store("jci-best",label)}
   view.innerHTML=`<section class="panel">
     <div class="eyebrow">${JCIPlayer.name()?"Well played, "+esc(JCIPlayer.name()):"Round complete"}</div>
-    <div class="big">${score}<small> / ${deck.length}</small></div>
-    <p class="saved" id="saved">Saving to the leaderboard…</p>
+    ${badge()}
+    <div class="big">${result.score}<small> / ${total}</small></div>
+    <p class="saved" id="saved"></p>
     <div><div class="answer">Your rank</div><div class="rank">${RANKS[r][1]}</div></div>
     <ul class="ladder">${RANKS.slice().reverse().map((x,k)=>`<li class="${RANKS.length-1-k===r?"on":""}"><span>${x[1]}</span><span>${x[0]}%+</span></li>`).join("")}</ul>
-    ${missed.length?`<div class="missed"><h3>Worth another read</h3>${missed.map(m=>`<div><b>${esc(m[4])}</b>${esc(m[3])}</div>`).join("")}</div>`:`<p>A perfect round. The General Legal Counsel would be proud.</p>`}
+    ${missed.length?`<div class="missed"><h3>Worth another read</h3>${missed.map(m=>`<div><b>${esc(m.art)}</b>${esc(m.why)}</div>`).join("")}</div>`:`<p>A perfect round. The General Legal Counsel would be proud.</p>`}
   </section>`;
+  JCIPlayer.scoreLine($("saved"),result,"leaderboard.html#swipe-"+mode);
   controls.innerHTML=`<button class="b-ghost" id="hm">Home</button><button class="b-main" id="ag">Play again</button>`;
   $("hm").onclick=home;$("ag").onclick=()=>start(mode);
-  const boardHref="leaderboard.html#swipe-"+mode;
-  JCIPlayer.submitScore({game:"swipe",mode,score,total:deck.length,duration_ms:Date.now()-t0})
-    .then(r=>JCIPlayer.scoreLine($("saved"),r,boardHref));
 }
 
 document.addEventListener("keydown",e=>{

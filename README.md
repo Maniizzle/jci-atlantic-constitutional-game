@@ -10,7 +10,7 @@ Three quick games that teach the JCI Atlantic 2022 Constitution & Policy Manual:
 | `/words.html` | **Crossword & Bingo**: solo crossword, plus bingo for General Assemblies |
 | `/leaderboard.html` | **Leaderboard**: best score per player, last 7 days or all time |
 
-Plain HTML, CSS and JavaScript with no build step. On Cloudflare (Workers), a small API in `src/` adds claimed player names and a leaderboard, stored in Cloudflare D1. Without that API (for example on Salus or any static host), the games still work and the leaderboard simply stays hidden.
+Plain HTML, CSS and JavaScript pages, served by a Cloudflare Worker. The Worker holds every question and answer, runs each round, marks each answer and keeps the leaderboard in Cloudflare D1. The pages never contain the answers.
 
 ## Project layout
 
@@ -21,29 +21,13 @@ site/            the website (everything public lives here)
   player.js      player name + leaderboard client (shared by all pages)
   theme.css      shared look (colours, buttons, cards)
   404.html       favicon.svg
-src/worker.js    Cloudflare Worker: /api/* to the API, everything else from site/
-src/api/         name.js, score.js, leaderboard.js
+src/worker.js    Cloudflare Worker: /api/* to the game server, everything else from site/
+src/api/         round.js (start / answer / status), name.js, leaderboard.js
+src/content/     the questions and answers: swipe.js, adventure.js, crossword.js
 src/lib.js       shared server rules: name checks, score limits, ranking
 wrangler.jsonc   Worker config: name, site folder, D1 database binding
 schema.sql       D1 tables (players, scores)
-nginx.conf       web server config: port 8080, caching, security headers, /healthz
-Dockerfile       container image Salus builds and runs
-```
-
-## Run it locally
-
-Any static server works:
-
-```bash
-cd site && python3 -m http.server 8080
-# open http://localhost:8080
-```
-
-Or exactly as Salus will run it:
-
-```bash
-docker build -t jci-games .
-docker run --rm -p 8080:8080 jci-games
+migrations/      updates for an existing database, run in order
 ```
 
 ## Deploy on Cloudflare Workers (recommended)
@@ -60,18 +44,30 @@ Every push to `master` runs `npx wrangler deploy`, which reads `wrangler.jsonc`.
 1. Storage & Databases → **D1** → database `jci-games` (its ID is in `wrangler.jsonc`).
 2. Open it → **Console**, paste the contents of `schema.sql`, run. (Safe to run again; it only creates what's missing.)
 
-**Already ran an older `schema.sql`?** Also run `migrations/001_allow_crossword.sql` once. Without it, crossword scores are refused. It keeps all existing scores.
+**Already have the database from before?** Run the files in `migrations/` in order, once each, instead of `schema.sql`. `002_server_rounds.sql` clears scores saved under the old rules (names are kept).
+
+### Official rounds and practice
+
+| Game | Official score | Month board | All-time board |
+| --- | --- | --- | --- |
+| Swipe (quick, full) | first round of each type each month | that round | official rounds added up |
+| Road to President | first run ever | runs finished this month | first runs |
+| Crossword | first finish of each puzzle | points earned this month | points from all puzzles |
+
+Everything after the official round is practice: same game, nothing saved. Months follow Lagos time.
 
 ### How names and scores are protected
 
 - Each phone gets a random device id the first time it plays. It works like a password for that player's name, travels in a request header, and is never shown or returned by the API.
 - A name belongs to one device. Matching ignores case, spaces and punctuation, and the database's `UNIQUE` rule enforces it.
 - The server takes the name from its own records, never from the score request.
-- Scores are checked: known game and mode only, score within range, a minimum time per card or scene, at most 30 games per device per hour, same-site requests only.
+- The server deals the questions, marks every answer and times the round itself. Scores can't be sent in; they're built from real answers.
+- An official round started and abandoned stays your official round: starting again resumes it.
+- Rounds that finish faster than a person could read them don't count. At most 60 rounds per device per hour, same-site requests only.
 - All queries are parameterized, and names are shown as plain text.
 - Stored: chosen name, scores, times and device id. No emails, phone numbers or IP addresses.
 
-A determined person can still script fake scores (no browser game can fully stop that). Use the moderation commands below.
+Still possible: someone using a second phone or browser as a new player (with a different name) to learn answers before their official round. The moderation commands below help if that happens.
 
 ### Moderation (run in D1 → Console)
 
@@ -97,35 +93,16 @@ npx wrangler d1 execute jci-games --local --file schema.sql   # local test datab
 npx wrangler dev                                               # http://localhost:8787
 ```
 
-## Deploy on Salus
-
-Salus builds from a Git repository and runs the `Dockerfile` as a container.
-
-1. **Push this repo to GitHub** (or GitLab / Azure DevOps):
-   ```bash
-   gh repo create jci-constitution-games --private --source . --push
-   # or create an empty repo on github.com, then:
-   git remote add origin git@github.com:<you>/jci-constitution-games.git
-   git push -u origin main
-   ```
-2. **Create a project in Salus** and pick the repository you just pushed.
-3. **Build settings:** choose the **Dockerfile** build (the Dockerfile is at the repo root).
-4. **Port:** `8080`. Salus doesn't pass a `PORT` variable, and nginx listens on 8080.
-5. **Visibility:** public.
-6. **Health check (optional):** `GET /healthz` returns `200 ok`.
-7. Deploy. Every push to `main` then rebuilds and redeploys through your release rules.
-
-To use your own domain (for example `quiz.jciatlantic.org`), add it under the project's custom domains (a Pro plan feature on Salus Cloud) and point a DNS `CNAME` at the address Salus gives you.
-
 ## Editing the questions
 
-- Swipe cards: the `CARDS` list in `site/swipe.html`. Each card is
-  `[chapter, statement, true/false, explanation, article]`. Flipped versions are in `TWINS`.
-- Adventure scenes: the `SCENES` list in `site/adventure.html`.
-- Crossword: the `PUZZLES` list in `site/words.html` (6 puzzles). Each word's row/column is fixed, so changing words needs a new layout. If a puzzle's word count changes, update `PUZZLE_WORDS` in `src/lib.js` to match.
-- Bingo clues: the `TERMS` list in `site/words.html`.
+All questions and answers are in `src/content/`:
 
-Commit and push, and Salus redeploys.
+- `swipe.js`: `CARDS` is `[chapter, statement, true/false, explanation, article]`. `TWINS` holds flipped versions.
+- `adventure.js`: `SCENES`, one per step. The right choice has `ok: true`.
+- `crossword.js`: `PUZZLES`. Each word's row and column is fixed, so changing words needs a new layout. Also update `PUZZLE_LIST` in `site/words.html` if you add a puzzle.
+- Bingo clues are in `TERMS` in `site/words.html` (bingo has no scores).
+
+Commit and push, and Cloudflare redeploys.
 
 ## Planned next
 

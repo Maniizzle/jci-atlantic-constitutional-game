@@ -1,7 +1,0 @@
-.git
-README.md
-*.md
-.DS_Store
-src/
-wrangler.jsonc
-schema.sql

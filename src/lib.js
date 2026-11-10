@@ -1,38 +1,24 @@
-// Shared helpers for the Pages Functions in /functions/api.
-// The database is reached only through the D1 binding named DB (Pages > Settings > Bindings).
+// Shared helpers for the API in src/api. The database is the D1 binding named DB (see wrangler.jsonc).
 
 export const LIMITS = {
-  scoresPerHour: 30,      // per device
+  roundsPerHour: 60,      // rounds a device may start per hour (official + practice)
   boardSize: 20,
 };
 
-// Crossword puzzles: id -> number of words (10 points each). Must match site/words.html.
-export const PUZZLE_WORDS = { p1: 14, p2: 15, p3: 15, p4: 14, p5: 15, p6: 14 };
+// Months run on Lagos time (UTC+1): "2026-11".
+export function monthKey(t = Date.now()) {
+  return new Date(t + 3600e3).toISOString().slice(0, 7);
+}
 
-// Rules a submitted score must satisfy. Anything else is rejected.
-export const GAMES = {
-  swipe: {
-    modes: { quick: 10, full: 32 },       // mode -> number of cards
-    lowerIsBetter: false,
-    check: (s, total) => s >= 0 && s <= total,
-    minMs: (mode, total) => total * 900,   // nobody reads and answers a card faster than this
-  },
-  adventure: {
-    modes: { story: 12 },                  // 12 scenes
-    lowerIsBetter: true,                   // score = slip-ups
-    check: (s) => s >= 0 && s <= 99,
-    minMs: (mode, total) => total * 1500,
-  },
-  crossword: {
-    // mode = puzzle id, total = 10 points per word
-    modes: Object.fromEntries(Object.entries(PUZZLE_WORDS).map(([id, n]) => [id, n * 10])),
-    lowerIsBetter: false,
-    check: (s, total) => s >= 0 && s <= total,
-    minMs: (mode) => PUZZLE_WORDS[mode] * 3000, // at least 3 seconds a word
-    firstOnly: true,                       // only the first finish of each puzzle counts
-    board: "total",                        // ranked by total points across all puzzles
-  },
-};
+// Which leaderboard slot an official round fills. One score per device per slot.
+//   swipe:     first round of each mode each month
+//   adventure: first run ever
+//   crossword: first finish of each puzzle
+export function slotFor(game, mode, month) {
+  if (game === "swipe") return `swipe:${mode}:${month}`;
+  if (game === "adventure") return "adventure:story";
+  return `crossword:${mode}`;
+}
 
 // Names we never show on the board.
 // Whole words only, so real names like "Odebunmi" or "Dickson" are fine.
@@ -89,9 +75,9 @@ export function sameOrigin(request) {
   try { return new URL(origin).host === new URL(request.url).host; } catch { return false; }
 }
 
-export async function readJson(request) {
+export async function readJson(request, max = 2000) {
   const text = await request.text();
-  if (text.length > 2000) return null;
+  if (text.length > max) return null;
   try { return JSON.parse(text); } catch { return null; }
 }
 
@@ -99,49 +85,40 @@ export function needDb(env) {
   return env && env.DB ? null : fail(503, "not-configured");
 }
 
-// Best score per player for one board, ranked. Device ids are used for ranking only.
+// How each board ranks. "single": one official score per player in the period.
+// "sum": official scores added up (each month's Swipe round, or every crossword puzzle).
+const BOARDS = {
+  swipe:     { byMode: true,  lowerIsBetter: false, agg: (period) => (period === "month" ? "single" : "sum") },
+  adventure: { byMode: false, lowerIsBetter: true,  agg: () => "single" },
+  crossword: { byMode: false, lowerIsBetter: false, agg: () => "sum" },
+};
+
+export function boardInfo(game) { return BOARDS[game] || null; }
+
+// Ranked rows for one board. Device ids are used for ranking only and never sent out.
 export async function board(db, game, mode, period) {
-  const g = GAMES[game];
-  const dir = g.lowerIsBetter ? "ASC" : "DESC";
-  const since = period === "week" ? "datetime('now','-7 days')" : "'1970-01-01'";
-  if (g.board === "total") {
-    // One score per puzzle per player (first finish only), so the sum is fair.
-    const { results } = await db
-      .prepare(
-        `SELECT p.name, s.device, SUM(s.score) AS score, SUM(s.total) AS total,
-                SUM(s.duration_ms) AS duration_ms, COUNT(*) AS count, MIN(s.created_at) AS created_at
-         FROM scores s JOIN players p ON p.device = s.device
-         WHERE s.game = ?1 AND s.created_at >= ${since}
-         GROUP BY s.device
-         ORDER BY score DESC, duration_ms ASC, created_at ASC
-         LIMIT 1000`
-      )
-      .bind(game)
-      .all();
-    return results.map((r, i) => ({ ...r, rank: i + 1 }));
-  }
-  const { results } = await db
-    .prepare(
-      `WITH best AS (
-         SELECT s.device, s.score, s.total, s.duration_ms, s.created_at,
-                ROW_NUMBER() OVER (PARTITION BY s.device
-                  ORDER BY s.score ${dir}, s.duration_ms ASC, s.created_at ASC) AS rn
-         FROM scores s
-         WHERE s.game = ?1 AND s.mode = ?2 AND s.created_at >= ${since}
-       )
-       SELECT p.name, b.device, b.score, b.total, b.duration_ms, b.created_at
-       FROM best b JOIN players p ON p.device = b.device
-       WHERE b.rn = 1
-       ORDER BY b.score ${dir}, b.duration_ms ASC, b.created_at ASC
-       LIMIT 1000`
-    )
-    .bind(game, mode)
-    .all();
+  const b = BOARDS[game];
+  const dir = b.lowerIsBetter ? "ASC" : "DESC";
+  const where = ["s.game = ?1"], args = [game];
+  if (b.byMode) { where.push(`s.mode = ?${args.length + 1}`); args.push(mode); }
+  if (period === "month") { where.push(`s.month = ?${args.length + 1}`); args.push(monthKey()); }
+  const sql = b.agg(period) === "sum"
+    ? `SELECT p.name, s.device, SUM(s.score) AS score, SUM(s.total) AS total, SUM(s.duration_ms) AS duration_ms,
+              COUNT(*) AS count, MIN(s.created_at) AS created_at
+       FROM scores s JOIN players p ON p.device = s.device
+       WHERE ${where.join(" AND ")} GROUP BY s.device
+       ORDER BY score ${dir}, duration_ms ASC, created_at ASC LIMIT 1000`
+    : `SELECT p.name, s.device, MIN(s.score) AS score, MIN(s.total) AS total, MIN(s.duration_ms) AS duration_ms,
+              NULL AS count, MIN(s.created_at) AS created_at
+       FROM scores s JOIN players p ON p.device = s.device
+       WHERE ${where.join(" AND ")} GROUP BY s.device
+       ORDER BY score ${dir}, duration_ms ASC, created_at ASC LIMIT 1000`;
+  const { results } = await db.prepare(sql).bind(...args).all();
   return results.map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
 export function publicRow(r, device) {
   const row = { rank: r.rank, name: r.name, score: r.score, total: r.total, seconds: Math.round(r.duration_ms / 1000), me: r.device === device };
-  if (r.count !== undefined) row.puzzles = r.count;
+  if (r.count !== null && r.count !== undefined) row.count = r.count;
   return row;
 }

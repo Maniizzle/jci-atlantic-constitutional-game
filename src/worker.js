@@ -1,25 +1,34 @@
 // JCI Atlantic Constitution Games: Cloudflare Worker entry.
-// /api/* goes to the leaderboard code; everything else is a file from site/.
+// /api/* goes to the game server; everything else is a file from site/.
 import * as name from "./api/name.js";
-import * as score from "./api/score.js";
 import * as leaderboard from "./api/leaderboard.js";
+import * as round from "./api/round.js";
 import { fail } from "./lib.js";
 
-const ROUTES = { "/api/name": name, "/api/score": score, "/api/leaderboard": leaderboard };
+const ROUTES = {
+  "GET /api/name": name.onRequestGet,
+  "POST /api/name": name.onRequestPost,
+  "GET /api/leaderboard": leaderboard.onRequestGet,
+  "POST /api/round/start": round.start,
+  "POST /api/round/act": round.act,
+  "GET /api/round/status": round.status,
+};
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname.startsWith("/api/")) {
-      const route = ROUTES[url.pathname.replace(/\/$/, "")];
-      if (!route) return fail(404, "not-found");
-      const handler = request.method === "GET" ? route.onRequestGet : request.method === "POST" ? route.onRequestPost : null;
-      if (!handler) return fail(405, "method");
+      const path = url.pathname.replace(/\/$/, "");
+      const handler = ROUTES[`${request.method} ${path}`];
+      if (!handler) {
+        const known = Object.keys(ROUTES).some((k) => k.endsWith(" " + path));
+        return fail(known ? 405 : 404, known ? "method" : "not-found");
+      }
       try {
         return await handler({ request, env, ctx });
       } catch (e) {
-        console.error("api error", url.pathname, e && e.stack || e);
+        console.error("api error", url.pathname, (e && e.stack) || e);
         return fail(500, "server");
       }
     }
