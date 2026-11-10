@@ -44,7 +44,7 @@ Every push to `master` runs `npx wrangler deploy`, which reads `wrangler.jsonc`.
 1. Storage & Databases → **D1** → database `jci-games` (its ID is in `wrangler.jsonc`).
 2. Open it → **Console**, paste the contents of `schema.sql`, run. (Safe to run again; it only creates what's missing.)
 
-**Already have the database from before?** Run the files in `migrations/` in order, once each, instead of `schema.sql`. `002_server_rounds.sql` clears scores saved under the old rules (names are kept).
+**Already have the database from before?** Run the files in `migrations/` in order, once each, instead of `schema.sql`. `002_server_rounds.sql` keeps existing scores but converts them to the official-round rules: the first score in each slot stays, later replays are removed. Names are untouched.
 
 ### Official rounds and practice
 
