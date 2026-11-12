@@ -65,6 +65,7 @@ h1{font-size:clamp(2rem,9vw,3rem)}
       <button type="button" id="p-all" aria-pressed="false">All time</button>
     </div>
     <span class="meta" id="meta"></span>
+    <a class="back" id="playLink" href="swipe.html">Play Swipe →</a>
   </div>
   <section class="panel" id="board" aria-live="polite"></section>
   <p class="sub" id="note"></p>
@@ -74,10 +75,10 @@ h1{font-size:clamp(2rem,9vw,3rem)}
 const $=id=>document.getElementById(id), esc=JCIPlayer.esc;
 JCIPlayer.chip($("player"));
 const BOARDS={
-  "swipe-quick":{game:"swipe",mode:"quick",play:"swipe.html"},
-  "swipe-full":{game:"swipe",mode:"full",play:"swipe.html"},
-  "adventure":{game:"adventure",mode:"story",play:"adventure.html"},
-  "crossword":{game:"crossword",mode:"total",play:"words.html"}
+  "swipe-quick":{game:"swipe",mode:"quick",play:"swipe.html",name:"Swipe"},
+  "swipe-full":{game:"swipe",mode:"full",play:"swipe.html",name:"Swipe"},
+  "adventure":{game:"adventure",mode:"story",play:"adventure.html",name:"Road to President"},
+  "crossword":{game:"crossword",mode:"total",play:"words.html",name:"the Crossword"}
 };
 let period="month";
 const MONTH=new Date().toLocaleString("en-GB",{month:"long",timeZone:"Africa/Lagos"});
@@ -112,6 +113,7 @@ function load(quiet){
   const key=current(),b=BOARDS[key],my=++seq;
   document.querySelectorAll(".boards a").forEach(a=>a.setAttribute("aria-current",a.dataset.b===key));
   $("note").textContent=NOTES[key][period];
+  $("playLink").href=b.play;$("playLink").textContent="Play "+b.name+" →";
   $("p-month").setAttribute("aria-pressed",period==="month");$("p-all").setAttribute("aria-pressed",period==="all");
   if(quiet!==true){skeleton();$("meta").textContent=""}
   JCIPlayer.leaderboard({game:b.game,mode:b.mode,period}).then(d=>{
