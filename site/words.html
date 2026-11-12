@@ -72,6 +72,7 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
 .pz.solved .pn{background:var(--mint);color:var(--on-color)}
 .pz.on{background:var(--blue);color:var(--blue-ink)}
 .pz.on small{color:var(--blue-ink);opacity:.85}
+.pz.on .pn{color:var(--ink)}
 .cwhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
 .cwhead h2{font-family:var(--display);font-weight:800;font-size:1.15rem;letter-spacing:-.03em;margin:0}
 .cwscore{display:flex;gap:6px;flex-wrap:wrap;font-size:.8rem;font-weight:700;color:var(--muted)}
@@ -86,6 +87,15 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
 .clues li.revealed .revtag{display:inline-block;background:var(--soft);color:var(--ink)}
 .clues li.done span{text-decoration:none}
 .clues li.done span{color:var(--muted)}
+.linkbtn{border:0;background:none;color:var(--blue);font-weight:800;font-size:.85rem;text-decoration:underline;text-underline-offset:3px;padding:2px 0;margin-right:auto}
+.howto{background:var(--surface);border:2.5px solid var(--border);border-radius:16px;box-shadow:4px 4px 0 var(--shade);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.howto-head{display:flex;justify-content:space-between;align-items:center}
+.howto-head b{font-family:var(--display);font-weight:800;letter-spacing:-.02em}
+.howto .x{border:2px solid var(--border);background:var(--surface);color:var(--ink);border-radius:50%;width:30px;height:30px;font-weight:800}
+.howto ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.howto .btn{align-self:flex-start}
+.clues li.done>span::before{content:"✓ ";color:var(--mint);font-weight:800}
+.clues li.revealed>span::before{content:""}
 .rules{font-size:.82rem;color:var(--muted);font-weight:600;max-width:46em}
 .yell{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:-.03em;background:var(--mint);color:var(--on-color);border:2.5px solid var(--border);border-radius:14px;padding:8px 14px;box-shadow:4px 4px 0 var(--shade);align-self:flex-start;animation:pop .25s ease-out}
 </style></head><body>
@@ -103,7 +113,18 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
     <div class="left">
       <h1>The <em>Constitution</em> Crossword</h1>
       <div class="pzs" id="puzzles" role="group" aria-label="Choose a puzzle"></div>
-      <div class="cwhead"><h2 id="cwTitle"></h2><div class="cwscore" id="cwScore"></div></div>
+      <div class="cwhead"><h2 id="cwTitle"></h2><button type="button" class="linkbtn" id="howtoOpen" aria-expanded="false" aria-controls="howto">How to play</button><div class="cwscore" id="cwScore"></div></div>
+      <div class="howto" id="howto" hidden>
+        <div class="howto-head"><b>How to play</b><button type="button" class="x" id="howtoClose" aria-label="Close how to play">✕</button></div>
+        <ul>
+          <li><b>Pick a word:</b> tap a square or a clue. Tap the same square again to switch between across and down.</li>
+          <li><b>Type the answer.</b> When a word is right, its clue gets a ✓ and shows the article it comes from.</li>
+          <li><b>Check answers</b> marks wrong letters in red. Each wrong letter costs 1 point.</li>
+          <li><b>Reveal this word</b> fills in the word you picked. That word scores 0, but its letters can help with crossing words.</li>
+          <li><b>Scoring:</b> 10 points per word you solve yourself. Your first finish of each puzzle is your official score; after that it's practice.</li>
+        </ul>
+        <button type="button" class="btn main" id="howtoOk">Got it</button>
+      </div>
       <div class="active" id="activeClue"></div>
       <div class="grid" id="grid"></div>
       <div class="banner" id="cwDone" hidden></div>
@@ -114,7 +135,6 @@ h1 em{font-style:normal;background:var(--gold);color:var(--on-color);padding:0 .
         <button class="btn" id="reveal">Reveal this word</button>
         <button class="btn" id="clear">Clear grid</button>
       </div>
-      <p class="rules">10 points per word you solve. Revealed words score 0, and each wrong letter flagged by Check costs 1 point. Your first finish of each puzzle is your official score; after that it's practice.</p>
     </div>
     <div class="clues"><div><span class="label">Across</span><ol id="across"></ol></div><div><span class="label">Down</span><ol id="down"></ol></div></div>
   </section>
@@ -168,7 +188,7 @@ const PUZZLE_LIST=[
   {id:"p4",title:"Officers & the Board"},{id:"p5",title:"Money & Benefits"},{id:"p6",title:"Creed & Values"}
 ];
 const PTS=10;
-let P=null,R=null,official=false,sol={},nums={},inputs={},cur=null,curWord=null,revealArm=null,local=null,busy=false;
+let P=null,R=null,official=false,sol={},nums={},inputs={},cur=null,curWord=null,local=null,busy=false;
 let solved=new Map(),revWords=new Set(),penalty=0,statusInfo={};
 const cellsOf=o=>Array.from({length:o.len},(_,k)=>(o.r+(o.d==="D"?k:0))+","+(o.c+(o.d==="A"?k:0)));
 const KEY=id=>"jci-cw-"+id;
@@ -318,7 +338,7 @@ function showDone(r,fresh){
   $("again").hidden=false;
   if(r){$("cwSaved").hidden=false;JCIPlayer.scoreLine($("cwSaved"),r,"leaderboard.html#crossword")}
 }
-function disarm(){if(revealArm){clearTimeout(revealArm);revealArm=null}$("reveal").textContent="Reveal this word";$("reveal").classList.remove("bad")}
+function disarm(){}
 $("check").onclick=()=>{
   if(!R||busy)return;
   const cells={};for(const k in inputs)if(inputs[k].value)cells[k]=inputs[k].value;
@@ -335,11 +355,7 @@ $("check").onclick=()=>{
 $("reveal").onclick=()=>{
   if(!R||busy)return;
   if(!curWord){$("activeClue").innerHTML="<span>Pick a word first, then reveal it.</span>";return}
-  if(!revWords.has(curWord.i)&&!revealArm){
-    $("reveal").textContent="Tap again: this word scores 0";$("reveal").classList.add("bad");
-    revealArm=setTimeout(disarm,4000);return;
-  }
-  disarm();busy=true;
+  busy=true;
   const o=curWord;
   JCIPlayer.round.act(R,{type:"reveal",i:o.i}).then(d=>{
     busy=false;if(!d||!d.ok){setMsg(esc(JCIPlayer.problem(d&&d.error)));return}
@@ -359,6 +375,11 @@ $("again").onclick=()=>{
   saveLocal();openPuzzle(P.id);
 };
 document.addEventListener("jci-name",()=>{if(local&&local.done)showDone(local.result,false)});
+function howto(show){$("howto").hidden=!show;$("howtoOpen").setAttribute("aria-expanded",show);
+  $("howtoOpen").textContent=show?"Hide rules":"How to play";if(!show)store("jci-cw-howto","seen")}
+$("howtoOpen").onclick=()=>howto($("howto").hidden);
+$("howtoClose").onclick=()=>howto(false);$("howtoOk").onclick=()=>howto(false);
+howto(store("jci-cw-howto")!=="seen");
 JCIPlayer.round.status("crossword").then(d=>{if(d&&d.ok){statusInfo=d.modes;renderPicker()}});
 openPuzzle(store("jci-cw-current")||"p1");
 
