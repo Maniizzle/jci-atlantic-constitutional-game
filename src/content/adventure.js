@@ -55,7 +55,7 @@ export const SCENES = [
   "text": "It's September and you're at the front of the room. The President asks you to recite the JCI Creed.",
   "choices": [
    {
-    "t": "Read it from your phone. Nobody memorizes these things.",
+    "t": "Read it from your phone. Nobody memorises these things.",
     "fail": "The whole room recites it for you, slowly",
     "why": "Intending members recite the Creed off hand at induction."
    },
@@ -108,7 +108,7 @@ export const SCENES = [
    {
     "t": "Give your vote to a senior member as your proxy.",
     "fail": "The General Legal Counsel shakes her head",
-    "why": "Proxies aren't recognized, and no one can cast more than one vote."
+    "why": "Proxies aren't recognised, and no one can cast more than one vote."
    },
    {
     "t": "You watch this one. New inductees can't vote for officers at the AGM of their induction year.",

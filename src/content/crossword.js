@@ -92,7 +92,7 @@ export const PUZZLES = [
     "r": 10,
     "c": 1,
     "d": "A",
-    "clue": "A stand-in vote. Never recognized at a General Assembly",
+    "clue": "A stand-in vote. Never recognised at a General Assembly",
     "art": "Article 7-7"
    },
    {
@@ -356,7 +356,7 @@ export const PUZZLES = [
     "r": 2,
     "c": 12,
     "d": "D",
-    "clue": "A stand-in vote. Never recognized",
+    "clue": "A stand-in vote. Never recognised",
     "art": "Article 7-7"
    },
    {

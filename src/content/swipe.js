@@ -96,7 +96,7 @@ export const CARDS = [
   "General Assembly",
   "You can vote by proxy if you send a letter to the Secretary.",
   false,
-  "Proxies are not recognized. Nobody casts more than one vote.",
+  "Proxies are not recognised. Nobody casts more than one vote.",
   "Article 7-7"
  ],
  [
@@ -257,7 +257,7 @@ export const TWINS = {
  "13": [
   "Each member present gets one vote, and proxies aren't allowed.",
   true,
-  "Proxies are not recognized. Nobody casts more than one vote."
+  "Proxies are not recognised. Nobody casts more than one vote."
  ],
  "14": [
   "Quorum for a General Assembly is one-third of the total membership.",
