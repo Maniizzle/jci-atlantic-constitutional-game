@@ -207,6 +207,16 @@
     render();document.addEventListener("jci-name",render);
   }
 
+  // "How to play" link + card. auto: open on the first visit to this page.
+  function howto(opts){
+    var card=document.getElementById(opts.card),btn=document.getElementById(opts.open);if(!card||!btn)return;
+    function set(show){card.hidden=!show;btn.setAttribute("aria-expanded",show?"true":"false");
+      btn.textContent=show?"Hide rules":"How to play";if(!show&&opts.key)sset(opts.key,"seen")}
+    btn.onclick=function(){set(card.hidden)};
+    card.querySelectorAll("[data-close]").forEach(function(b){b.onclick=function(){set(false);btn.focus()}});
+    set(!!opts.auto&&sget(opts.key)!=="seen");
+  }
+
   device();
-  window.JCIPlayer={name:name,ask:ask,require:require,chip:chip,esc:esc,round:round,leaderboard:leaderboard,scoreLine:scoreLine,problem:problem,sync:syncLocalName};
+  window.JCIPlayer={name:name,ask:ask,require:require,chip:chip,esc:esc,round:round,leaderboard:leaderboard,scoreLine:scoreLine,problem:problem,sync:syncLocalName,howto:howto};
 })();

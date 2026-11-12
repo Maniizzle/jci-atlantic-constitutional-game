@@ -77,8 +77,21 @@ html,body{height:100%}
 <div class="app">
   <div class="hud">
     <a class="back" href="index.html">← All games</a>
+    <button type="button" class="linkbtn" id="howtoOpen" aria-expanded="false" aria-controls="howto">How to play</button>
     <div class="player" id="player"></div>
     <div class="score" id="score" hidden>Score <span id="scoreN">0</span></div>
+  </div>
+  <div class="howto" id="howto" hidden>
+    <div class="howto-head"><b>How to play</b><button type="button" class="x" data-close aria-label="Close how to play">✕</button></div>
+    <ul>
+      <li><b>Read the statement</b> about the JCI Atlantic constitution and decide if it's true or false.</li>
+      <li><b>Swipe right for true, left for false.</b> You can also tap the True and False buttons, or use the → and ← keys.</li>
+      <li><b>After each answer</b> the card shows what the constitution actually says, with the article it comes from.</li>
+      <li><b>Scoring:</b> 1 point per correct card. Your rank at the end goes from Intending Member up to President.</li>
+      <li><b>Official rounds:</b> your first quick round and your first full round each month count for the leaderboard. Replays are practice.</li>
+      <li><b>Leaving mid-round?</b> Your official round waits for you and continues where you stopped.</li>
+    </ul>
+    <button type="button" class="btn main" data-close>Got it</button>
   </div>
   <div class="bar" id="barWrap" hidden><i id="bar"></i></div>
   <main id="view" class="stage"></main>
@@ -87,6 +100,7 @@ html,body{height:100%}
 <script src="player.js"></script>
 <script>
 JCIPlayer.chip(document.getElementById("player"));
+JCIPlayer.howto({card:"howto",open:"howtoOpen"});
 const RANKS=[[0,"Intending Member"],[40,"Inducted Member"],[60,"Board Director"],[80,"Vice President"],[100,"President"]];
 const $=id=>document.getElementById(id);
 const view=$("view"),controls=$("controls");

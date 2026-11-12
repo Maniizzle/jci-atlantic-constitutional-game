@@ -104,3 +104,12 @@ html.name-open{overflow:hidden}
 .saved b{color:var(--ink);font-family:var(--display)}
 .saved a{color:var(--blue);font-weight:800}
 .board-link{display:block;text-align:center;text-decoration:none}
+
+/* "How to play" link + rules card (all games) */
+.linkbtn{border:0;background:none;color:var(--blue);font-weight:800;font-size:.85rem;text-decoration:underline;text-underline-offset:3px;padding:2px 0}
+.howto{background:var(--surface);border:2.5px solid var(--border);border-radius:16px;box-shadow:4px 4px 0 var(--shade);padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.howto-head{display:flex;justify-content:space-between;align-items:center}
+.howto-head b{font-family:var(--display);font-weight:800;letter-spacing:-.02em}
+.howto .x{border:2px solid var(--border);background:var(--surface);color:var(--ink);border-radius:50%;width:30px;height:30px;font-weight:800}
+.howto ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.howto .btn{align-self:flex-start}

@@ -54,8 +54,21 @@ h2{font-size:1.45rem;line-height:1.15}
 <div class="app">
   <div class="hud">
     <a class="back" href="index.html">← All games</a>
+    <button type="button" class="linkbtn" id="howtoOpen" aria-expanded="false" aria-controls="howto">How to play</button>
     <div class="player" id="player"></div>
     <div class="slips" id="slips" hidden>Slip-ups <span id="slipN">0</span></div>
+  </div>
+  <div class="howto" id="howto" hidden>
+    <div class="howto-head"><b>How to play</b><button type="button" class="x" data-close aria-label="Close how to play">✕</button></div>
+    <ul>
+      <li><b>You play a new member</b> rising from applicant to President of JCI Atlantic, across 12 scenes.</li>
+      <li><b>Each scene gives you three choices.</b> Pick what the constitution says you should do.</li>
+      <li><b>A wrong choice is a slip-up.</b> You'll see what the constitution says, then rewind the scene and choose again.</li>
+      <li><b>Scoring:</b> fewer slip-ups is better. Ties on the leaderboard go to the faster time.</li>
+      <li><b>Official run:</b> only your first full run counts for the leaderboard. Every run after that is practice.</li>
+      <li><b>Leaving mid-run?</b> Your official run waits for you and continues where you stopped.</li>
+    </ul>
+    <button type="button" class="btn main" data-close>Got it</button>
   </div>
   <div class="ladder" id="ladder"></div>
   <main id="view"></main>
@@ -63,6 +76,7 @@ h2{font-size:1.45rem;line-height:1.15}
 <script src="player.js"></script>
 <script>
 JCIPlayer.chip(document.getElementById("player"));
+JCIPlayer.howto({card:"howto",open:"howtoOpen"});
 const STAGES=["Applicant","Intending Member","Member","Director","Vice President","President"];
 const $=id=>document.getElementById(id);
 const view=$("view");
